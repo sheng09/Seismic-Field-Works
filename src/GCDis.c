@@ -4,6 +4,8 @@
 #define  YES 1
 #define  NO  0
 #define  PI (atan(1.0) * 4.0)
+#ifndef POINT
+#define POINT
 typedef struct
 {
 	double x;
@@ -17,6 +19,17 @@ typedef struct
 }Point;
 int Cord(Point *p);
 double Dis(Point p1, Point p2);
+#endif
+
+static char HMSG[]=
+{"\
+Description: Calculate great circle distance given 2 points.\n\
+Usage: %-6s -Elon/lat -Tlon/lat [-H]\n\
+(-E) Coordination(rad) of the 1th point.\n\
+(-T) Coordination(rad) of the 2nd point.\n\
+[-H] Display this message.\n\
+"};
+
 int main(int argc, char const *argv[])
 {
 	Point p1,p2;
@@ -36,6 +49,9 @@ int main(int argc, char const *argv[])
 					sscanf(argv[i],"-T%lf/%lf",&(p2.lon), &(p2.lat));
 					kp2 = YES;
 					break;
+				case 'H':
+					fprintf(stderr, HMSG, argv[0]);
+					exit(0);
 				default:
 					break;
 			}
@@ -44,7 +60,7 @@ int main(int argc, char const *argv[])
 	}
 	if(kp1 != YES || kp2 != YES)
 	{
-		fprintf(stderr, "%s -Elon/lat -Tlon/lat\n",argv[0]);
+		fprintf(stderr, HMSG, argv[0]);
 		exit(0);
 	}
 	if(p1.lat < -90.0 || p1.lat > 90.0 || p2.lat < -90.0 || p2.lat > 90.0 ||
@@ -72,7 +88,7 @@ int Cord(Point *p)
 double Dis(Point p1, Point p2)
 {
 	return 180.0/PI*
-			acos(p1.x*p2.x +
-	        	 p1.y*p2.y +
-	             p1.z*p2.z   );
+		acos(p1.x*p2.x +
+		     p1.y*p2.y +
+		     p1.z*p2.z   );
 }
