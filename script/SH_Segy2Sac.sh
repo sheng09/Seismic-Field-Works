@@ -27,11 +27,11 @@ do
         esac
 done
 
-ln -s $DIR TMP
 if [[ -z $DIR ]]; then
 	echo $HMSG
 	exit 1
 fi
+ln -s $DIR TMP
 
 segy2sac TMP/R*/*
 
