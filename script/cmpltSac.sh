@@ -36,7 +36,7 @@ if [[ -z $DIR || -z $INFO ]]; then
 	exit 1
 fi
 
-ln -s $DIR TMP
+ln -s $DIR TMP 2>&-
 
 awk '{if(substr($0,1,1) != "#" && substr($0,1,1) != "\t" ) {print $0} }' $INFO > tmplist
 i="1"
@@ -56,31 +56,30 @@ while read LINE; do
 	Lon=`echo $LINE   | awk '{print $5}'`
 	Lat=`echo $LINE   | awk '{print $6}'`
 
-	echo 
-	echo "echo $i $Name $Das $VERBOSE" | sh
+	echo "echo $i Processing: $LINE $VERBOSE" | sh
 ######################################################################################################
 #23456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
 #  1         2            3           4           5         6         7          8           9
 #  KNETWK    KSTNM        stla        stlo        cmpaz     cmpinc    kcmpnm     LPSPOL      IDEP
 #
 #For BHZ
-sac << EOF
+sac > /dev/null << EOF
 r $DIR/*$Das.1.sac
-ch KNETWK TC KSTNM  $Name stla   $Lon stlo   $Lat cmpaz   0 cmpinc  0 kcmpnm BHZ LPSPOL TRUE IDEP IVEL
+ch KNETWK TC KSTNM  $Name stla   $Lat stlo   $Lon cmpaz   0 cmpinc  0 kcmpnm BHZ LPSPOL TRUE IDEP IVEL
 w over
 q
 EOF
 #For BHN
-sac << EOF
+sac > /dev/null << EOF
 r $DIR/*$Das.2.sac
-ch KNETWK TC KSTNM  $Name stla   $Lon stlo   $Lat cmpaz   0 cmpinc 90 kcmpnm BHN LPSPOL TRUE IDEP IVEL
+ch KNETWK TC KSTNM  $Name stla   $Lat stlo   $Lon cmpaz   0 cmpinc 90 kcmpnm BHN LPSPOL TRUE IDEP IVEL
 w over
 q
 EOF
 #For BHE
-sac << EOF
+sac > /dev/null << EOF
 r $DIR/*$Das.3.sac
-ch KNETWK TC KSTNM  $Name stla   $Lon stlo   $Lat cmpaz  90 cmpinc 90 kcmpnm BHE LPSPOL TRUE IDEP IVEL
+ch KNETWK TC KSTNM  $Name stla   $Lat stlo   $Lon cmpaz  90 cmpinc 90 kcmpnm BHE LPSPOL TRUE IDEP IVEL
 w over
 q
 EOF
@@ -88,4 +87,4 @@ EOF
 	i=`expr $i + 1`
 done < tmplist
 
-rm tmplist TMP -f
+rm tmplist TMP -f 
