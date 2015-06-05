@@ -8,14 +8,14 @@
 #  Add getopts(-D -C -V) functions.
 #  Wangsheng
 #  2015-05-08
-HMSG="Usage: SH_Ref2Segy.sh -D Dircetory [-C Casfile] [-V]"
+HMSG="Usage: SH_Ref2Segy.sh -D Directory [-C Casfile] [-V]"
 VERBOSE=" > /dev/null"
 while  getopts  "D:C:V"  arg #选项后面的冒号表示该选项需要参数
 do
     case  $arg  in
         D)
             DIR=$OPTARG
-            #echo  \#Dircetory: $DIR
+            #echo  \#Directory: $DIR
             ;;
         C)
             CASFILE=$OPTARG
@@ -65,4 +65,4 @@ for STA in `ls ../TMPDIR`; do
 done
 
 cd $PWD
-rm ./TMPDIR ./TMPCAS -r
+rm ./TMPDIR ./TMPCAS -f
