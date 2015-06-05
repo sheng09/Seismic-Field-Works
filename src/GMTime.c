@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <math.h>
 #define YES 1
 #define NO  0
 
@@ -18,20 +18,22 @@ typedef struct
 int rtime(Time *t);
 int rtimej(Time *t);
 int wtime(Time *t);
-int chh(Time *t,int x);
+int shft(Time *t,float sec);
 int  jd(Time *t);
 int ijd(Time *t);
+int uni(Time *t);
 #endif
 
 static char HMSG[]=
 {"\
 Description: Transform date format and shift the hour.\n\
 Usage: %-6s (-Dyyyy-mm-dd | -Jyyyy-ddd)\n\
-              [-Thh:mm:ss.ss -Shourshift]\n\
+              [-Thh:mm:ss.ss]\n\
+              [-Shh:mm:ss.ss]\n\
               [-H]\n\
 (-D|-J) Date\n\
 [-T]    Time\n\
-[-S]    Shift the hour, This  option should be used with the -T and -D|-J option.\n\
+[-S]    Shift the time, This option should be used with the -T and -D|-J option.\n\
 [-H]    Display this message.\n\
 "};
 
@@ -40,7 +42,7 @@ int main(int argc, char const *argv[])
 	Time t;
 	int i;
 	int ktd=NO, kjd=NO, ktt=NO, ks=NO;
-	int hshift;
+	float sshift;
 	memset(t.KDATE,0,16);
 	memset(t.KTIME,0,16);
 	memset(t.KJD  ,0,16);
@@ -63,7 +65,7 @@ int main(int argc, char const *argv[])
 					ktt = YES;
 					break;
 				case 'S':
-					sscanf(argv[i]+2,"%d",&hshift);
+					sscanf(argv[i]+2,"%f",&sshift);
 					ks = YES;
 					break;
 				case 'H':
@@ -90,23 +92,24 @@ int main(int argc, char const *argv[])
 	if(ks == YES)
 	{
 		if(ktt == YES)
-			chh(&t,hshift);
+			shft(&t,sshift);
 		else
 		{
-			fprintf(stderr, "Err: -T is needed fo -S\n");
+			fprintf(stderr, "Err: -T is needed for -S\n");
 			exit(0);
 		}
 	}
 
 	//Write Date and Time into "string"
+	uni(&t);
 	wtime(&t);
 
 	//Output Date or Time corresponding to options
-	if(ktd == YES)
+	//if(ktd == YES)
 		printf("%s ",t.KJD);
-	if(kjd == YES)
+	//if(kjd == YES)
 		printf("%s ",t.KDATE );
-	if(ks == YES && ktt == YES)
+	//if(ks == YES && ktt == YES)
 		printf("%s ",t.KTIME );
 	printf("\n");
 	return 0;
@@ -117,6 +120,7 @@ int rtime(Time *t)
 	sscanf(t->KDATE,"%d-%d-%d", &(t->y), &(t->mon), &(t->d));
 	sscanf(t->KTIME,"%d:%d:%f", &(t->h), &(t->min), &(t->s));
 	jd(t);
+	uni(t);
 	return 0;
 }
 int rtimej(Time *t)
@@ -124,6 +128,7 @@ int rtimej(Time *t)
 	sscanf(t->KJD  ,"%d-%d"   , &(t->y), &(t->jd));
 	sscanf(t->KTIME,"%d:%d:%f", &(t->h), &(t->min), &(t->s));
 	ijd(t);
+	uni(t);
 	return 0;
 }
 int wtime(Time *t)
@@ -136,8 +141,10 @@ int wtime(Time *t)
 
 static months[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},
                       {31,29,31,30,31,30,31,31,30,31,30,31}};
-int chh(Time *t,int x)
+int shft(Time *t,float sec)
 {
+	t->s   += sec;
+	/*
 	int i = 1;
 	if(t->y%4 != 0 || (t->y%100 == 0 && t->y%400 != 0))
 		i = 0;
@@ -179,7 +186,7 @@ int chh(Time *t,int x)
 	{
 		t->mon = 12;
 		--t->y;
-	}
+	}*/
 	return 0;
 }
 int  jd(Time *t)
@@ -217,8 +224,57 @@ int ijd(Time *t)
 	}
 	if(jd >= 1 && i == 12)
 	{
-		fprintf(stderr, "Err: \"%s\"\n", t->KJD);
-		exit(0);
+		fprintf(stderr, "Warning: \"%s\"\n", t->KJD);
+		for(i = 0; i < 12; ++i)
+		{
+			if(jd <= months[j][i])
+			{
+				t->mon = i+1;
+				t->d   = jd;
+				break;
+			}
+			else
+				jd -= months[j][i];
+		}
+		t->y += 1;
+		//exit(0);
 	}
+	return 0;
+}
+int uni(Time *t)
+{
+	if(t->s >= 0.0)
+	{
+		t->min += ((int) (floorf(t->s))) / 60;
+		t->s    = t->s - 60.0 * (((int) (floorf(t->s))) / 60);
+	}
+	else
+	{
+		t->min += ( ((int) (floorf(t->s))) / 60  - 1 );
+		t->s    = t->s - 60.0 * (((int) (floorf(t->s))) / 60 - 1 );	
+	}
+	
+	if(t->min >= 0)
+	{
+		t->h   += t->min / 60;
+		t->min  = t->min - 60 * (t->min / 60);
+	}
+	else
+	{
+		t->h   += (t->min / 60 - 1);
+		t->min  = t->min - 60 * (t->min / 60 - 1);	
+	}
+
+	if(t->h >= 0)
+	{
+		t->jd  += t->h / 24;
+		t->h    = t->h - 24 * (t->h / 24);
+	}
+	else
+	{
+		t->jd  += t->h / 24 - 1;
+		t->h    = t->h - 24 * (t->h / 24 - 1);
+	}
+	ijd(t);
 	return 0;
 }

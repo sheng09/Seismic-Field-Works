@@ -28,7 +28,7 @@ double Az(Point p1, Point p2); // p1-->p2
 static char HMSG[]=
 {"\
 Description: Calculate great circle distance given 2 points.\n\
-Usage: %-6s -Elon/lat -Tlon/lat [-H]\n\
+Usage: %-6s -Elon/lat -Slon/lat [-H]\n\
 (-E) Coordination(Deg) of the Eq.\n\
 (-S) Coordination(Deg) of the Sta.\n\
 [-H] Display this message.\n\
