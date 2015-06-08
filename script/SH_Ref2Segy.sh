@@ -36,15 +36,12 @@ if [[ -z $DIR ]]; then
 	exit 1
 fi
 
-PWD=`pwd`
-ln -s $DIR     ./TMPDIR
-ln -s $CASFILE ./TMPCAS
+PWD_=`pwd`
+ln -s $DIR     TMPDIR
+ln -s $CASFILE TMPCAS
 
-if [[ -a ./SEGY ]]; then
-    rm ./SEGY/*
-else
-    mkdir ./SEGY
-fi
+mkdir ./SEGY 2>&- || rm ./SEGY/* -r -f 2>&-
+
 cd ./SEGY
 
 i=0;
@@ -64,5 +61,5 @@ for STA in `ls ../TMPDIR`; do
 	done
 done
 
-cd $PWD
+cd $PWD_
 rm ./TMPDIR ./TMPCAS -f
