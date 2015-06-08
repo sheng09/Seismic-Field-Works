@@ -13,7 +13,7 @@
 #  2015-06-03
 
 HMSG="
-Usage: pkEv.sh -D Directory -S stainfo.list -E evtinfo.list -A pretime(Second) -B subtime(Second) [-V]\n
+Usage: pkEv.sh -D Directory -S stainfo.list -E evtinfo.list -A pretime(Second) -B suftime(Second) [-V]\n
 \n
 ~~~~~~~~~~~~~~~~Example of stainfo.list:~~~~~~~~~~~~~~~~~~~~\n
 #Counts StaName DasName PendulumName Longitude Latitude\n
@@ -26,7 +26,36 @@ Usage: pkEv.sh -D Directory -S stainfo.list -E evtinfo.list -A pretime(Second) -
 2015-05-01	16:06:03.0	-5.15	151.80	50	Ms	6.8	eq	新不列颠地区\n
 2015-04-30	18:45:05.5	-5.40	151.75	60	Ms	6.7	eq	新不列颠地区\n
 2015-04-30	00:09:52.3	40.05	142.60	40	Ms	5.1	eq	日本本州东岸近海\n
-"
+\n
+~~~~~~~~~~~~~~~~Example Tree of Directory:~~~~~~~~~~~~~~~~~~\n
+SAC\n
+├── 15.122.04.00.00.9F40.1.sac\n
+├── 15.122.04.00.00.9F40.2.sac\n
+├── 15.122.04.00.00.9F40.3.sac\n
+├──...\n
+\n
+Description:\n
+Given \"stainfo.list\" file, \"evtinfo.list\" file, \"Directory\" containing SAC_DATA, and \"pretime\",\n
+\"suftime\", pkEv.sh will calculate theoretical traveltime \"t1\" of P phase using taup package for\n
+each Ev-St couple(Note: none P phase exists for some Ev-St couple because of the Shadow Area.). \n
+Then, pkEv.sh will selected relevant file that contain [t1+ pretime, t1+ suftime], assign sachdr\n
+information contain \"kevnm evla evlo evdp mag o t1\" and cut time series into \n
+[t1+ pretime, t1+ suftime] period (Note: Some time interval may spread over two file, thus merge \n
+operation will be called).\n
+Finally, all the selected data will classified according to Event name.\n
+\n
+Judgement about the existence of data corresponding to  relative time period will be operated.\n
+\n
+Note:\n
+Because the time within evtinfo.list is Beijing(GMT+8) time. Thus an operation of shifting GMT+8\n
+to GMT+0 time is done. You can rewrite it from line 126-128 in the script.\n
+\n
+Eg:\n
+pkEv.sh -D ./SAC -S ./stainfo.list -E ./evtinfo.list -A -30 -B 200 -V\n
+\n
+Wangsheng IGG-CAS\n
+wangsheng.cas@gmail.com"
+
 VERBOSE=" > /dev/null"
 
 while  getopts  "D:S:E:A:B:V"  arg #选项后面的冒号表示该选项需要参数
@@ -53,7 +82,7 @@ do
              ?)  #当有不认识的选项的时候arg为 ?
             	#echo  " unkonw argument "
         		exit  1
-        ;;
+        		;;
         esac
 done
 
@@ -75,7 +104,7 @@ awk '{if(substr($0,1,1) != "#" && substr($0,1,1) != "\t" ) {print $0} }' $STA   
 #01       SHZ      9EA1     T3E21         98.45652   25.03042
 #02       LJZ      9F47     T3D87         98.46242   25.06306
 
-i=00
+i=0
 mkdir SAC_EV 2>&- || rm SAC_EV/* -r -f 2>&-
 
 while read evLINE; do
@@ -127,6 +156,7 @@ while read evLINE; do
 			DTA=$(echo "$TrlT+$A"|bc)
 			DTB=$(echo "$TrlT+$B"|bc)
 
+			#Arrival time
 			#artDT=`GMTime -D$evDT -T$evTM -S$TrlT | awk '{print $2}'`
 			artJD=`GMTime -D$evDT -T$evTM -S$TrlT | awk '{print $1}'`
 			artTM=`GMTime -D$evDT -T$evTM -S$TrlT | awk '{print $3}'`
@@ -137,11 +167,12 @@ while read evLINE; do
 			artS=`echo  $artTM | awk -F: '{print $3}' | awk -F. '{print $1}'`
 			artMS=`echo $artTM | awk -F: '{print 0substr($3,3,3)}' | awk '{print 1000*$1}'`
 
-
+			#Pre arrival time
 			AJD=`GMTime -D$evDT -T$evTM -S$DTA | awk '{print $1}'`
 			ATM=`GMTime -D$evDT -T$evTM -S$DTA | awk '{print $3}'`
+			#Suf arrival time
 			BJD=`GMTime -D$evDT -T$evTM -S$DTB | awk '{print $1}'`
-			BTM=`GMTime -D$evDT -T$evTM -S$DTA | awk '{print $3}'`
+			BTM=`GMTime -D$evDT -T$evTM -S$DTB | awk '{print $3}'`
 
 			ANM1=`echo $AJD | awk -F- '{print $1}' | awk '{print substr($1,3,2)}'`
 			ANM2=`echo $AJD | awk -F- '{print $2}'`
@@ -155,91 +186,117 @@ while read evLINE; do
 
 			#Judge whether the time series spread over two continuous records.
 			if [[ $ANM == $BNM ]]; then
-				#echo "$ANM $kstDAS $DIR/$ANM*$kstDAS*"
 				if [[ ! -z `ls $DIR/$ANM*$kstDAS* 2>/dev/null` ]]; then
-sac > /dev/null << EOF
-r $DIR/$ANM*$kstDAS*
-ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG
-#
+					#Copy SAC_DATA to SAC_EV/EV/ Directory
+					cp $DIR/$ANM*$kstDAS* $FILENM
+#Sac Processing ###################################################
+sac > /dev/null << EOF || echo "Fatal Err: Insufficient length $DIR/$ANM*$kstDAS*" ||  exit
+r $FILENM/$ANM*$kstDAS*
+#Remove mean value and linear trace 
+rmean
+rtr
+taper
+#Assign Header info
+ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG a -12345
+#Assign time info
 ch o  gmt $evY  $evD  $evH  $evM  $evS  $evMS
 ch t1 gmt $artY $artD $artH $artM $artS $artMS
-#ch o gmt 1987 173 11 10 10 363
+w over
+q
+EOF
+
+#Cut time 
+sac > /dev/null << EOF
+cuterr fatal; cut t1 $A $B
+r $FILENM/$ANM*$kstDAS*.sac
 w over
 q
 EOF
 					echo "echo $stLINE $VERBOSE" | sh
-					cp $DIR/$ANM*$kstDAS* $FILENM
 				fi
 			else
 			#Merge records
 				KMERGE=0
 				if [[ ! -z `ls $DIR/$ANM*$kstDAS* 2>/dev/null` &&  ! -z `ls $DIR/$BNM*$kstDAS* 2>/dev/null` ]]; then
 					KMERGE=1
-sac > /dev/null << EOF
-#Merge [123] data #####################################
-r $DIR/$ANM*$kstDAS*.1.sac $DIR/$BNM*$kstDAS*.1.sac
-merge
-w over
-
-r $DIR/$ANM*$kstDAS*.2.sac $DIR/$BNM*$kstDAS*.2.sac
-merge
-w over
-
-r $DIR/$ANM*$kstDAS*.3.sac $DIR/$BNM*$kstDAS*.3.sac
-merge
-w over
-#######################################################
-r $DIR/$ANM*$kstDAS*
-ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG
-ch o gmt $evY $evD $evH $evM $evS $evMS
-ch t1 gmt $artY $artD $artH $artM $artS $artMS
-w over
-q
-EOF
+					echo -e "Note: Merge happen! Time Series spread over two kinds of file:\n$DIR/$ANM*$kstDAS*.[123].sac $DIR/$BNM*$kstDAS*.[123].sac\n"
+					#Copy SAC_DATA to SAC_EV/EV/ Directory
 					cp $DIR/$ANM*$kstDAS* $FILENM
-				fi
-
-				if [[ $KMERGE == 0 && ! -z `ls $DIR/$ANM*$kstDAS* 2>/dev/null` ]]; then
-					echo -e "Warning: Time Series spread over two kinds of file: \n
-  $DIR/$ANM*$kstDAS*.[123].sac $DIR/$BNM*$kstDAS*.[123].sac\n
-  BUT $DIR/$BNM*$kstDAS*.[123].sac DON'T exist!"
-
-sac > /dev/null << EOF
-r $DIR/$ANM*$kstDAS*
-ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG
-ch o gmt $evY $evD $evH $evM $evS $evMS
-ch t1 gmt $artY $artD $artH $artM $artS $artMS
-w over
-q
-EOF
-					echo "echo $stLINE $VERBOSE" | sh
-					cp $DIR/$ANM*$kstDAS* $FILENM
-				fi
-
-				if [[ $KMERGE == 0 && ! -z `ls $DIR/$BNM*$kstDAS* 2>/dev/null` ]]; then
-					echo -e "Warning: Time Series spread over two kinds of file: \n
-  $DIR/$ANM*$kstDAS*.[123].sac $DIR/$BNM*$kstDAS*.[123].sac\n
-  BUT $DIR/$ANM*$kstDAS*.[123].sac DON'T exist!"
-
-sac > /dev/null << EOF
-r $DIR/$BNM*$kstDAS*
-ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG
-ch o gmt $evY $evD $evH $evM $evS $evMS
-ch t1 gmt $artY $artD $artH $artM $artS $artMS
-w over
-q
-EOF
-					echo "echo $stLINE $VERBOSE" | sh
 					cp $DIR/$BNM*$kstDAS* $FILENM
+#Sac Processing ###################################################
+sac > /dev/null << EOF
+#Merge date
+r $FILENM/$ANM*$kstDAS*.1.sac $FILENM/$BNM*$kstDAS*.1.sac
+merge
+w over
+r $FILENM/$ANM*$kstDAS*.2.sac $FILENM/$BNM*$kstDAS*.2.sac
+merge
+w over
+r $FILENM/$ANM*$kstDAS*.3.sac $FILENM/$BNM*$kstDAS*.3.sac
+merge
+w over	
+#	
+r $FILENM/$ANM*$kstDAS*.sac
+#Remove mean value and linear trace 
+rmean
+rtr
+taper
+#Assign Header info
+ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG a -12345
+#Assign time info
+ch o  gmt $evY  $evD  $evH  $evM  $evS  $evMS
+ch t1 gmt $artY $artD $artH $artM $artS $artMS
+w over
+q
+EOF
+
+#Cut time 
+sac > /dev/null <<EOF
+cuterr fatal; cut t1 $A $B
+r $FILENM/$ANM*$kstDAS*.sac
+w over
+q
+EOF
+					#Remove unnecessary file
+					rm $FILENM/$BNM*$kstDAS*.[123].sac
+					echo "echo $stLINE $VERBOSE" | sh
+				fi
+
+				#$DIR/$BNM*$kstDAS*.[123].sac Don't exist
+				if [[ $KMERGE == 0 && ! -z `ls $DIR/$ANM*$kstDAS* 2>/dev/null` ]]; then
+					echo -e "Warning: Time Series spread over two kinds of file: \n$DIR/$ANM*$kstDAS*.[123].sac $DIR/$BNM*$kstDAS*.[123].sac\nBUT $DIR/$BNM*$kstDAS*.[123].sac DON'T exist!"
+
+					#					cp $DIR/$ANM*$kstDAS* $FILENM
+					#sac > /dev/null  << EOF
+					#r $DIR/$ANM*$kstDAS*
+					#ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG a -12345
+					#ch o gmt $evY $evD $evH $evM $evS $evMS
+					#ch t1 gmt $artY $artD $artH $artM $artS $artMS
+					#w over
+					#q
+					#EOF
+					#					echo "echo $stLINE $VERBOSE" | sh
+				fi
+				#$DIR/$ANM*$kstDAS*.[123].sac Don't exist
+				if [[ $KMERGE == 0 && ! -z `ls $DIR/$BNM*$kstDAS* 2>/dev/null` ]]; then
+					echo -e "Warning: Time Series spread over two kinds of file: \n  $DIR/$ANM*$kstDAS*.[123].sac $DIR/$BNM*$kstDAS*.[123].sac\n  BUT $DIR/$ANM*$kstDAS*.[123].sac DON'T exist!"
+					#					cp $DIR/$BNM*$kstDAS* $FILENM
+					#sac > /dev/null << EOF
+					#r $DIR/$BNM*$kstDAS*
+					#ch kevnm $evNM evla $evla evlo $evlo evdp $evdp mag $evMAG a -12345
+					#ch o gmt $evY $evD $evH $evM $evS $evMS
+					#ch t1 gmt $artY $artD $artH $artM $artS $artMS
+					#w over
+					#q
+					#EOF
+					#					echo "echo $stLINE $VERBOSE" | sh
 				fi
 			fi
-			#echo $artJD $artDT $artTM $AJD $BJD
 		fi
 
 	done < tmpsta
 	echo "echo \#E\#$VERBOSE" | sh
-
-	#Remove empty directory and 
+	#Remove empty directory and make new ones with sufname "Empty" 
 	rmdir $FILENM 2>&- && mkdir $FILENM"Empty"
 done < tmpevt
 
