@@ -154,7 +154,8 @@ while read stLINE; do
         TrlT=`taup_time -mod prem -h $evdp -ph P -deg $Dis | awk 'NR==6{print $4}'`
 
         #Judge whether P phase exists
-        if [[ ! -z $TrlT ]]; then
+        #if [[ ! -z $TrlT ]]; then
+        if [[ ! -z $TrlT && $Dis > 30 && $Dis < 90 ]]; then
             DTA=$(echo "$TrlT+$A"|bc)
             DTB=$(echo "$TrlT+$B"|bc)
 
