@@ -1,0 +1,5 @@
+\contentsline {section}{\numberline {1}Ref格式数据的转换}{2}
+\contentsline {section}{\numberline {2}SAC格式头段信息简介}{3}
+\contentsline {section}{\numberline {3}补全SAC文件头段台站信息变量}{4}
+\contentsline {section}{\numberline {4}补全SAC文件头段事件信息变量}{5}
+\contentsline {section}{\numberline {5}时间序列预处理}{6}
