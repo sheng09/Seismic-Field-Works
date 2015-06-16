@@ -33,8 +33,8 @@
 	}
 }{}
 \lstdefinelanguage{bash} {
-	keywords={bash>}, % SAC提示符
-	otherkeywords={bash>}, % SAC提示符
+	keywords={bash>}, % bash提示符
+	otherkeywords={bash>}, % bash提示符
 	sensitive=true,
 	comment=[l][{\color{green!40!black}}]{\#},
 }
@@ -215,14 +215,32 @@ SAC软件预处理命令范例如下：\par
 SAC> r eg.sac           #读入SAC文件
 SAC> rmean              #去均值
 SAC> rtr                #去线性趋势
-SAC> taper ***          #尖灭
+SAC> taper              #尖灭
 SAC> transfer           #去仪器响应
 SAC> rotate to gcp      #旋转至大圆路径，即RTZ分量
 SAC> cut t1 -50 200     #截取t1时间前50s到后200s
-SAC> bandpass ***       #带通滤波
-SAC> lowpass ***        #低通滤波
-SAC> highpass ***       #高通滤波
-SAC> bandrej ***        #带阻滤波
+SAC> bandpass BU CORNERS 0.01 1 N 4
+     #带通滤波，选择Butterworth滤波器，拐点频率为0.01Hz~1Hz，极点数为4
+SAC> lowpass BU CORNER 1 N 4
+     #低通滤波，选择Butterworth滤波器，拐点频率为1Hz，极点数为4
+SAC> highpass BU CORNER 1 N 4
+     #高通滤波，选择Butterworth滤波器，拐点频率为1Hz，极点数为4
+SAC> bandrej BU CORNERs 0.01 1 N 4
+     #带阻滤波，选择Butterworth滤波器，拐点频率为0.01Hz~1Hz，极点数为4
+\end{SACCode}
+\clearpage
+SAC软件数据查看命令简介：
+\begin{SACCode}
+SAC> r *.ri                  #读入当前目录下所有R分量到内存中
+     #每读入一次，内存就会刷新一次，内存之前读入的数据全部清除
+SAC> p1                      #绘制内存所有的数据
+SAC> lowpass BU CORNER 1 N 2 #简单低通滤波
+SAC> p1                      #更新绘图
+SAC> ed x                    #关闭图形窗
+SAC> lh default columns 2    #显示所有的SAC头段信息，两列显示
+SAC> lh kstnm stla stlo kevnm evla evlo columns 2
+     #指定SAC头段变量，并两列显示
+SAC> q                       #退出
 \end{SACCode}
 
 %\clearpage\section{总结及Seismic-Field-Works操作流程简介}
