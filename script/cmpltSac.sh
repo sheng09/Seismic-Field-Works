@@ -32,8 +32,6 @@ cmpltSac -D ./SAC -S ./stainfo.list -V\n
 Wangsheng IGG-CAS\n
 wangsheng.cas@gmail.com"
 
-KNETWK TC KSTNM  $Name stla   $Lat stlo   $Lon cmpaz   0 cmpinc  0 kcmpnm BHZ LPSPOL TRUE IDEP IVEL
-
 VERBOSE=" > /dev/null"
 while  getopts  "D:S:V"  arg #选项后面的冒号表示该选项需要参数
 do
