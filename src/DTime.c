@@ -3,15 +3,16 @@
 #include <string.h>
 #include <math.h>
 #include "libtime.h"
-
+#include "liberrmsg.h"
 static char HMSG[]=
 {"\
 Description: Calculate dt for {D T - F Y}, return value is in seconds.\n\
-Usage: %-6s (-Dyyyy-mm-dd | -Jyyyy-ddd)\n\
-            (-Thh:mm:ss.ss)\n\
-            (-Fyyyy-mm-dd | -Kyyyy-ddd)\n\
-            (-Yhh:mm:ss.ss)\n\
+Usage: %-6s (-Dyyyy/mm/dd | -Jyyyy/ddd)\n\
+            (-Thh:mm:ss.sss)\n\
+            (-Fyyyy/mm/dd | -Kyyyy/ddd)\n\
+            (-Yhh:mm:ss.sss)\n\
             [-H]\n\
+\n\
 (-D|-J) Date1\n\
 (-T)    Time1\n\
 (-F|-K) Date1\n\
@@ -77,6 +78,7 @@ int main(int argc, char const *argv[])
 	if( ( (kt1d + kt1jd) != YES ) || kt1t != YES ||
 	    ( (kt2d + kt2jd) != YES ) || kt2t != YES    )
 	{
+		perrmsg("",ERR_MORE_ARGS);
 		fprintf(stderr, HMSG, argv[0]);
 		exit(0);
 	}
@@ -91,11 +93,14 @@ int main(int argc, char const *argv[])
 		rtime(&t2);
 	else if(kt2jd == YES)
 		rtimej(&t2);
-
+	if(!judge(&t1) || !judge(&t2))
+	{
+		exit(1);
+	}
 	Dt = dt(&t1,&t2);
 	if(Dt < 0)
-		printf("%f -1", Dt );
+		printf("%f -1\n", Dt );
 	else
-		printf("%f 1", Dt );
+		printf("%f 1\n", Dt );
 	return 0;
 }

@@ -3,13 +3,15 @@
 #include <string.h>
 #include <math.h>
 #include "libtime.h"
+#include "liberrmsg.h"
 static char HMSG[]=
 {"\
 Description: Transform date format and shift the hour.\n\
-Usage: %-6s (-Dyyyy-mm-dd | -Jyyyy-ddd)\n\
-              [-Thh:mm:ss.ss]\n\
-              [-Sss.ss]\n\
+Usage: %-6s (-Dyyyy/mm/dd | -Jyyyy/ddd)\n\
+              [-Thh:mm:ss.sss]\n\
+              [-Sss.sss]\n\
               [-H]\n\
+\n\
 (-D|-J) Date\n\
 [-T]    Time\n\
 [-S]    Shift the time, This option should be used with the -T and -D|-J option.\n\
@@ -57,16 +59,21 @@ int main(int argc, char const *argv[])
 	}
 	if(ktd != YES && kjd != YES)
 	{
+		perrmsg("",ERR_MORE_ARGS);
 		fprintf(stderr, HMSG, argv[0]);
-		exit(0);
+		exit(1);
 	}
-
+	if(ktt != YES)
+		strcpy(t.KTIME,"00:00:00.000");
 	//Read Date and Time
 	if(ktd == YES)
 		rtime(&t);
 	else if(kjd == YES)
 		rtimej(&t);
-
+	if(!judge(&t))
+	{
+		exit(1);
+	}
 	//Shift the hour when -T and -S are used
 	if(ks == YES)
 	{
@@ -74,8 +81,8 @@ int main(int argc, char const *argv[])
 			shft(&t,sshift);
 		else
 		{
-			fprintf(stderr, "Err: -T is needed for -S\n");
-			exit(0);
+			perrmsg("Err: -T is needed for -S\n   ", ERR_MORE_ARGS);
+			exit(1);
 		}
 	}
 
@@ -85,10 +92,11 @@ int main(int argc, char const *argv[])
 
 	//Output Date or Time corresponding to options
 	//if(ktd == YES)
-		printf("%s ",t.KJD);
+	printf("%s ",t.KJD);
 	//if(kjd == YES)
-		printf("%s ",t.KDATE );
+	printf("%s ",t.KDATE );
 	//if(ks == YES && ktt == YES)
+	if(ktt == YES)
 		printf("%s ",t.KTIME );
 	printf("\n");
 	return 0;

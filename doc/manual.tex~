@@ -5,6 +5,9 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{booktabs}
+%\usepackage{epstopdf}
+%\usepackage{epsf}
+
 %%%%%%%%
 %%%%%%%%
 \usepackage{listings}
@@ -33,8 +36,8 @@
 	}
 }{}
 \lstdefinelanguage{bash} {
-	keywords={bash>}, % SAC提示符
-	otherkeywords={bash>}, % SAC提示符
+	keywords={bash>}, % bash提示符
+	otherkeywords={bash>}, % bash提示符
 	sensitive=true,
 	comment=[l][{\color{green!40!black}}]{\#},
 }
@@ -42,6 +45,19 @@
 	\lstset{
 		language={bash}, % 语言
 		keywordstyle=\color{blue}, % 关键字颜色
+	}
+}{}
+\lstdefinelanguage{file} {
+	keywords={\#}, % 注释提示符
+	otherkeywords={\#}, % 注释提示符
+	sensitive=true,
+	comment=[l][{\color{green!40!black}}]{\#},
+}
+\lstnewenvironment{fileCode}{
+	\lstset{
+		backgroundcolor=\color{green!20!white}, % 背景色
+		language={file}, % 语言
+		keywordstyle=\color{green!40!black}, % 关键字颜色
 	}
 }{}
 
@@ -215,17 +231,226 @@ SAC软件预处理命令范例如下：\par
 SAC> r eg.sac           #读入SAC文件
 SAC> rmean              #去均值
 SAC> rtr                #去线性趋势
-SAC> taper ***          #尖灭
+SAC> taper              #尖灭
 SAC> transfer           #去仪器响应
 SAC> rotate to gcp      #旋转至大圆路径，即RTZ分量
 SAC> cut t1 -50 200     #截取t1时间前50s到后200s
-SAC> bandpass ***       #带通滤波
-SAC> lowpass ***        #低通滤波
-SAC> highpass ***       #高通滤波
-SAC> bandrej ***        #带阻滤波
+SAC> bandpass BU CORNERS 0.01 1 N 4
+     #带通滤波，选择Butterworth滤波器，拐点频率为0.01Hz~1Hz，极点数为4
+SAC> lowpass BU CORNER 1 N 4
+     #低通滤波，选择Butterworth滤波器，拐点频率为1Hz，极点数为4
+SAC> highpass BU CORNER 1 N 4
+     #高通滤波，选择Butterworth滤波器，拐点频率为1Hz，极点数为4
+SAC> bandrej BU CORNERs 0.01 1 N 4
+     #带阻滤波，选择Butterworth滤波器，拐点频率为0.01Hz~1Hz，极点数为4
+\end{SACCode}
+\clearpage
+SAC软件数据查看命令简介：
+\begin{SACCode}
+SAC> r *.ri                  #读入当前目录下所有R分量到内存中
+     #每读入一次，内存就会刷新一次，内存之前读入的数据全部清除
+SAC> p1                      #绘制内存所有的数据
+SAC> lowpass BU CORNER 1 N 2 #简单低通滤波
+SAC> p1                      #更新绘图
+SAC> ed x                    #关闭图形窗
+SAC> lh default columns 2    #显示所有的SAC头段信息，两列显示
+SAC> lh kstnm stla stlo kevnm evla evlo columns 2
+     #指定SAC头段变量，并两列显示
+SAC> q                       #退出
 \end{SACCode}
 
 %\clearpage\section{总结及Seismic-Field-Works操作流程简介}
+\clearpage\section{合成理论接受函数}
+接受函数正演是反演的基础。人工合成的结果也应用于反演，以判断一种方法的正误。在此介绍李志伟的合成理论接受函数程序。synrflzw来源于DERFmulti\_submit20090526\_v2包，在terminal中运行即可获得以下帮助：\par
+
+\begin{bashCode}
+bash> synrflzw
+**********************************************************
+*Given Model and some necessary information, compute 
+* synthetic receiver funciton waveforms in ZRT coordinate.
+*
+**** Help information  ***********************************
+*synrflzw MOD= FM= BAZ= RP= O= 	
+*
+*MOD = Model
+*FM  = Frequency Maximum, used for forward calculation.
+*BAZ = Back Azimuth, (in degree) NOT work for isotropic
+*      inversion. 	
+*RP  = Ray Parameter(Horizontal Slowness ), (in s/km.)
+*O   = Out put receiver function waveforms, 
+*      (H T L - components )	
+*
+**********************************************************
+bash>
+\end{bashCode}
+例子如下：\par
+\begin{bashCode}
+bash> synrflzw MOD=essmod.syn FM=1.2 BAZ=0.0 RP=0.042 \
+      O=./rfr/test.syn.042
+\end{bashCode}
+其中，essmod.syn描述了理论模型，其内容如下所示。文件的规则是：\par
+\begin{fileCode}
+syn
+Theta Phig
+DepthofLayerBottom,Vp(km/s),B,C,Vp/Vs,E,density(g/cm^3),NSL
+4
+0 0
+5.0	5.50	0.0	0.00	1.70	0.0	2.665	0
+0 0
+15.0    6.20    0.0     0.00    1.73    0.0    	2.782   0
+0 0
+25.0    6.30    0.0     0.00    1.73    0.0     2.811   0
+0 0
+40.0    6.60    0.0     0.00    1.75    0.0    	2.897   0
+0 0
+100.0	8.00	0.0	0.00	1.80	0.0	3.302	0
+\end{fileCode}
+\par
+1.前3行是注释行；\par
+2.第4行是半空间上的覆盖层数，essmod.syn中是4；\par
+3.后续每2行为一层介质的参数，第1行是各向异性的theta和fai值，第2行列出了层厚，P波速，B，C，波速比，E，密度，NSL；\par
+FM指定了合成地震记录最大频率值， BAZ参数指定了大圆弧路径反方位角，RP参数指定了射线参数值(s/km)，O指定了输出文件名。\par
+试运行如下：\par
+\includegraphics[width=13cm]{wave.eps}
+
+\clearpage\section{反演}
+这里介绍DERFmulti\_submit20090526\_v2包中的derfmod。其使用了差异演化算法()反演获得速度结构。terminal中的命令给出帮助信息：\par
+\begin{bashCode}
+bash> derfmod
+***********************************************************
+*Using DE method to search the best 1-D Model
+*   (isotropic or anisotropic).
+*Using Receiver Function waveforms in Z R T system.
+*Only using R component in isotropic media.
+*Using R and T components in anisotropic media.
+***********************************************************
+* derfmod  -Mmod -Bmod.scale -Drfs.list -Ggauss -Tbeg/end \
+*	  [-Sst/seed/F/CR/NP/genmax] \
+*         [-Ianiso -Hrfs.listT -WRweight/Tweight ]
+*
+* -M mod: 1-D model used to determine the searcing scales
+* -B mod.scale 1-D searching scales relative to 1-D model
+* -D rfs.list list of stacked RFs according ray parameter, 
+       with stack number
+* -G Gauss: Gauss filter for distrilling receiver functions
+* -T beg/end: begin and end time relative to P onset for 
+     inversion
+*
+* -I aniso: 0, Inverse for Isotropic Vp, Thickness, 
+*              and Vp/Vs [0]
+*	   -1, Inverse for Isotropic Vp, Thickness,
+*              with fixed Vp/Vs
+*	   -2, Inverse for Isotropic Vp, with fixed
+*              Thickness and Vp/Vs
+*	    1, Inverse for Anisotropic Model.
+* -W weight: Rweight, weight for Radial RFs; 1>Rweight>0 
+*	     Tweight, weight for tangential RFs;1>Tweight>0
+*	     Rweight + Tweight = 1.0 
+* -H rfs.listT list of stacked tangential RFs according ray 
+               parameter, with stack number
+* -S st: strategy for DE, can be 1 to 10.[3] integer
+*    seed: random number seed,		 [5] integer
+*    F: weight factor, 0<F<1,		 [0.85] float
+*    CR: crossing over factor, 0<CR<1    [0.98] float
+*    NP: population size, about 5-10 times of unknow para-
+*        meters
+*        [10] integer
+*   genmax: maximum number of generations, [40] integer
+\end{bashCode}
+\par例子如下：\par
+\begin{bashCode}
+bash> derfmod -Messmod -Bessmod.DEB -Drfr.list \
+      -G2.5 -T0.0/32.0 -I-1 -S3/5/0.85/0.98/10/50
+\end{bashCode}
+\par
+命令参数中，-M指定了搜索中心模型文件，其文件格式与synrflzw中的essmod.syn相同；-B参数指定了一维搜索模型的范围，其文件内容格式是：\par
+1.第1行是注释行；\par
+2.第2行是半空间上的覆盖层数，这与搜索中心模型对应；\par
+3.后续内容每2行指定了每一参数的搜索范围，参数顺序是：厚度，P波速，B，C，波速比，E，密度；\par
+\begin{fileCode}
+ESS forward model
+4
+0	0
+5.0	0.6	0.0	0.0	0.0	0.0	0.0
+0       0
+5.0     0.6     0.0     0.0     0.0     0.0     0.0
+0	0
+5.0     0.6     0.0     0.0     0.0     0.0     0.0
+0	0
+10.0    0.6     0.0     0.0    	0.0     0.0     0.0
+0	0
+0.0     0.0 	0.0	0.0	0.0	0.0	0.0
+\end{fileCode}
+\par
+-D参数指定了接受函数文件名list，本例子中，其内容如下。其中，第一列指定了文件名，第二列指定了此接收函数的叠加次数。\par
+\begin{fileCode}
+rfr/test.syn.056.eqr 1
+\end{fileCode}
+\par
+-G参数指定了高斯滤波参数值；-T指定了时间序列截取的起始和终止相对时间；-I指定需要反演哪些参数，本例子中，反演各向同性介质中的层厚与P波速，这也与-B参数指定的模型参数搜索范围相对应；-W指定了径向与切向接收函数的权重，仅适用于各向异性反演；-H指定了切向接收函数的文件列表和叠加次数，其内容格式与-D参数相同，仅适用于各向异性反演；-S参数指定了差异演化算法的策略与对应的参数值。在例子中，选择策略3，随机数为5，权重因子未0.85，差异系数为0.98，每一代的人口数为10，演化代数为10。\par
+
+
+\clearpage\section{基于KMI台的实验}
+本小节以KMI台为例，从下载数据到接收函数提取，最后反演获得合理的速度模型。\par
+\subsection{数据下载}
+本例使用JWEED软件挑选台站与事件，下载事件文件。JWEED由IRIS提供，可以在http://ds.iris.edu/ds/nodes/dmc/software/downloads/jweed/下载。此软件有JAVA开发，可交互式挑选数据并下载。\par
+本例选择KMI(昆明台)自2013-12-31-00:00:00~~2015-07-02-00:00:00，震中距30度～90度的内震级大于5.5的所有事件记录。时间截取长度选择P波出动前20s~后150s的数据。数据放在/home/wsh/JWEED.dir/Data\_KMI目录下。\par
+\subsection{预处理数据}
+使用JWEED下载的数据已经是SAC格式数据，其文件名格式是IC.KMI.00.BH1.M\_\_at\_\_2015-03-22T06.03.54.019Z.SAC，不可以直接用于ＸＸＸ软件。更改后的文件格式是IC.KMI.00.M\_\_at\_\_2015-03-22T06.03.54.019Z.SAC.BH[NEZ]，其中BH1对应BHN，BH2对应BHE。根据derfmod的需求，sac文件T7头段给定射线参数值。不需要其他预处理操作。\par
+\subsection{提取接收函数}
+使用pburg\_lzw做反褶积提取接收函数，pburg\_lzw的使用格式是：\par
+\begin{bashCode}
+bash> ../src/pburg_lzw <<EOF
+2008.187.02.12.04
+y
+30
+10
+80
+n
+2.5
+10
+EOF
+bash>
+\end{bashCode}\par
+其中，2008.187.02.12.04制定了文件名中除了后缀.BH[NEZ]的其他部分，y指定了地理坐标，30指定了B到A的时间差(s)，10指定了截取A之前10s，80指定截取A之后80s，n指定不Taper，2.5是高斯参数，10指定接收函数结果延后10s。\par
+使用脚本运行如下：\par
+\begin{bashCode}
+bash> decon.sh -D KMI/Data_KMI -L KMI/KMI.list.info \
+      -R KMI/RFS -V
+bash> #!Note:不要在-D参数后加"/"
+bash> 
+\end{bashCode}
+\par
+此脚本运行后，会在每一层子目录下生成相应接收函数，并在工作目录下生成KMI.list.info文件，其格式如下：\par
+\begin{fileCode}
+#Counts RF-PreName     Dir-Name
+1 1.KMI.2015.03.2206 : 2015-03-22T05.56.22.3700_5.5
+2 2.KMI.2015.03.2822 : 2015-03-28T22.28.50.7800_5.9
+3 3.KMI.2015.03.2907 : 2015-03-29T07.50.54.2900_5.6
+...
+\end{fileCode}\par
+\subsection{反演}
+按照derfmod程序，要求，需要给定中心模型，及对应的搜索范围模型，以非线性搜索最合适的模型，在第7小节中给反演需要的不同的文件及其对应格式。本范例中，将由最简单的半无线空间单覆盖层开始，逐次增加模型的复杂度。\par
+第一次反演，模型文件与模型搜索范围如下：\par
+\begin{fileCode}
+************** 1st Model  KMI.1.mod **************
+Theta Phig
+Thickness,Vp(km/s),B,C,Vp/Vs,E,density(g/cm^3),NSL
+1
+0 0
+40.0    6.80    0.00     0.00   1.75    0.00    2.80    0
+0 0
+100.0	8.00	0.00	 0.00	1.80	0.00	3.30	0
+\end{fileCode}
+\par
+\begin{fileCode}
+************ 1st Model  KMI.1.mod.deb ************
+1
+0	0
+10.0    0.5     0.0     0.0    	1.0     0.0     0.0
+0	0
+0.0     0.0 	0.0	0.0	0.0	0.0	0.0
+\end{fileCode}
 
 \end{CJK}
 \end{document}
