@@ -47,19 +47,25 @@ int shft(Time *t,float dfsec)
 }
 int  jd(Time *t)
 {
-	if(ISLEAP(t->year))
-		t->jday = pre[1][t->mon -1] + t->day;
-	else
-		t->jday = pre[0][t->mon -1] + t->day;
+	//if(ISLEAP(t->year))
+	//	t->jday = pre[1][t->mon -1] + t->day;
+	//else
+	//	t->jday = pre[0][t->mon -1] + t->day;
+
+	//Revised by wangsheng 2015/09/01
+	t->jday = pre[ISLEAP(t->year)][t->mon -1] + t->day;
 	return 0;
 }
 int ijd(Time *t)
 {
-	int i, year_type = 0;
-	if(ISLEAP(t->year))
-		year_type = 1;
-	else
-		year_type = 0;
+	int i, year_type;
+	//if(ISLEAP(t->year))
+	//	year_type = 1;
+	//else
+	//	year_type = 0;
+
+	//Revised by wangsheng 2015/09/01
+	year_type = ISLEAP(t->year);
 	for(i = 0; i < 12; ++i)
 	{
 		if( (t->jday >  pre[year_type][i]) &&
@@ -73,6 +79,7 @@ int ijd(Time *t)
 }
 int uni(Time *t)
 {
+	int  i;
 	if(t->f_s >= 0.0)
 	{
 		t->min += ((int) (floorf(t->f_s))) / 60;
@@ -109,7 +116,26 @@ int uni(Time *t)
 		t->jday   += t->hour / 24 - 1;
 		t->hour    = t->hour - 24 * (t->hour / 24 - 1);
 	}
+	//Add and revised by wangsheng 2015/09/01
+	//ijd(t);
+	if(t->jday > pre[ISLEAP(t->year)][12])
+	{
+		for( i = t->year; t->jday > pre[ISLEAP(i)][12]; ++i)
+		{
+			t->jday -= pre[ISLEAP(i)][12];
+			t->year += 1;
+		}
+	}
+	else if(t->jday <= 0)
+	{
+		for( i = t->year; t->jday <= 0; ++i)
+		{
+			t->jday += pre[ISLEAP(i-1)][12];
+			t->year -= 1;
+		}
+	}
 	ijd(t);
+	//End of Add and revision 2015/09/01
 	return 0;
 }
 float dtsameyear(Time *t1, Time *t2) //t1 - t2
@@ -169,12 +195,13 @@ float dt(Time *t1, Time *t2) //t1 - t2
 }
 int judge(Time *t)
 {
-	int year_type = 0;
-	if(ISLEAP(t->year))
-		year_type = 1;
-	else
-		year_type = 0;
-
+	int year_type;
+	//if(ISLEAP(t->year))
+	//	year_type = 1;
+	//else
+	//	year_type = 0;
+	year_type = ISLEAP(t->year);
+	//Revised by wangsheng 2015/09/01
 	if( t->mon < 1  || t->mon > 12 ||
             t->day < 1  || t->day > months[year_type][t->mon - 1] ||
             t->jday < 1 || t->jday > pre[year_type][12]
