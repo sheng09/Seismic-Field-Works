@@ -250,7 +250,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 }
 
                 memset(Line, 0, MAXLENGTH);
-                sprintf(Line, "out/EV%05d",j);
+                sprintf(Line, "out/EV%05d", j+1);
                 if( nlst > 0L)
                 {
                         ev = &(evdat[j]);
