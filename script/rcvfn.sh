@@ -79,16 +79,15 @@ w $datar $datat
 q
 EOF
 #Acquire Vertical compenent
-#cp $dataz $data.z
-
-sac > /dev/null <<EOF
-r $dataz $datar $datat
-rmean;rtr;taper
-lowpass BU CORNER $freq N 2
-w over
-q
-EOF
-	iter_decon -F1/3/-5 -N50 -C1/-10/30 -T0.1 $dataz $datar $datat 2>&-
+cp $dataz $data.z
+#sac > /dev/null <<EOF
+#r $dataz $datar $datat
+#rmean;rtr;taper
+#lowpass BU CORNER $freq N 2
+#w over
+#q
+#EOF
+	iter_decon -F1/2.5/-5 -N100 -C1/-10/30 -T0.1 $dataz $datar $datat 2>&-
 sac > /dev/null <<EOF
 r $rcvfR $rcvfT
 ch nzyear 2015 nzjday 0 nzhour 0 nzmin 0 nzsec 0 nzmsec 0

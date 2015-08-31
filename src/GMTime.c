@@ -2,35 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#define YES 1
-#define NO  0
-
-#ifndef TIME
-#define TIME 
-typedef struct
-{
-	int y,mon,jd,d,h,min;
-	float s;
-	char KDATE[16];
-	char KJD[16];
-	char KTIME[16];
-}Time;
-int rtime(Time *t);
-int rtimej(Time *t);
-int wtime(Time *t);
-int shft(Time *t,float sec);
-int  jd(Time *t);
-int ijd(Time *t);
-int uni(Time *t);
-#endif
-
+#include "libtime.h"
+#include "liberrmsg.h"
 static char HMSG[]=
 {"\
 Description: Transform date format and shift the hour.\n\
-Usage: %-6s (-Dyyyy-mm-dd | -Jyyyy-ddd)\n\
-              [-Thh:mm:ss.ss]\n\
-              [-Shh:mm:ss.ss]\n\
+Usage: %-6s (-Dyyyy/mm/dd | -Jyyyy/ddd)\n\
+              [-Thh:mm:ss.sss]\n\
+              [-Sss.sss]\n\
               [-H]\n\
+\n\
 (-D|-J) Date\n\
 [-T]    Time\n\
 [-S]    Shift the time, This option should be used with the -T and -D|-J option.\n\
@@ -78,16 +59,21 @@ int main(int argc, char const *argv[])
 	}
 	if(ktd != YES && kjd != YES)
 	{
+		perrmsg("",ERR_MORE_ARGS);
 		fprintf(stderr, HMSG, argv[0]);
-		exit(0);
+		exit(1);
 	}
-
+	if(ktt != YES)
+		strcpy(t.KTIME,"00:00:00.000");
 	//Read Date and Time
 	if(ktd == YES)
 		rtime(&t);
 	else if(kjd == YES)
 		rtimej(&t);
-
+	if(!judge(&t))
+	{
+		exit(1);
+	}
 	//Shift the hour when -T and -S are used
 	if(ks == YES)
 	{
@@ -95,8 +81,8 @@ int main(int argc, char const *argv[])
 			shft(&t,sshift);
 		else
 		{
-			fprintf(stderr, "Err: -T is needed for -S\n");
-			exit(0);
+			perrmsg("Err: -T is needed for -S\n   ", ERR_MORE_ARGS);
+			exit(1);
 		}
 	}
 
@@ -106,175 +92,12 @@ int main(int argc, char const *argv[])
 
 	//Output Date or Time corresponding to options
 	//if(ktd == YES)
-		printf("%s ",t.KJD);
+	printf("%s ",t.KJD);
 	//if(kjd == YES)
-		printf("%s ",t.KDATE );
+	printf("%s ",t.KDATE );
 	//if(ks == YES && ktt == YES)
+	if(ktt == YES)
 		printf("%s ",t.KTIME );
 	printf("\n");
-	return 0;
-}
-
-int rtime(Time *t)
-{
-	sscanf(t->KDATE,"%d-%d-%d", &(t->y), &(t->mon), &(t->d));
-	sscanf(t->KTIME,"%d:%d:%f", &(t->h), &(t->min), &(t->s));
-	jd(t);
-	uni(t);
-	return 0;
-}
-int rtimej(Time *t)
-{
-	sscanf(t->KJD  ,"%d-%d"   , &(t->y), &(t->jd));
-	sscanf(t->KTIME,"%d:%d:%f", &(t->h), &(t->min), &(t->s));
-	ijd(t);
-	uni(t);
-	return 0;
-}
-int wtime(Time *t)
-{
-	sprintf(t->KDATE,"%04d-%02d-%02d" ,t->y,t->mon,t->d);
-	sprintf(t->KJD,"%04d-%03d"        ,t->y,t->jd);
-	sprintf(t->KTIME,"%02d:%02d:%05.2f",t->h,t->min,t->s);
-	return 0;
-}
-
-static months[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},
-                      {31,29,31,30,31,30,31,31,30,31,30,31}};
-int shft(Time *t,float sec)
-{
-	t->s   += sec;
-	/*
-	int i = 1;
-	if(t->y%4 != 0 || (t->y%100 == 0 && t->y%400 != 0))
-		i = 0;
-	t->h += x;
-
-	// 0<= Hour <= 23
-	if(t->h < 0)
-	{
-		t->h += 24;
-		t->jd -= 1;
-		if(t->d == 1)
-		{
-			t->d = months[i][t->mon-2];
-			t->mon -= 1;
-		}
-		else
-			t->d -= 1;
-	}
-	else if(t->h >= 24)
-	{
-		t->h -= 24;
-		t->jd += 1;
-		if(t->d == months[i][t->mon-1])
-		{
-			t->d = 1;
-			t->mon += 1;
-		}
-		else
-			t->d += 1;
-	}
-
-	// 1<= Month <= 12
-	if(t->mon >12)
-	{
-		--t->mon;
-		++t->y;
-	}
-	else if(t-> mon < 1)
-	{
-		t->mon = 12;
-		--t->y;
-	}*/
-	return 0;
-}
-int  jd(Time *t)
-{
-	int jd = 0;
-	int i;
-	if(t->y%4 != 0 || (t->y%100 == 0 && t->y%400 != 0))
-		for(i = 0; i < t->mon-1; ++i)
-			jd += months[0][i];
-	else
-		for(i = 0; i < t->mon-1; ++i)
-			jd += months[1][i];
-	jd += t->d;
-	t->jd = jd;
-	return 0;
-}
-int ijd(Time *t)
-{
-	int i;
-	int j = 1;
-	if(t->y%4 != 0 || (t->y%100 == 0 && t->y%400 != 0))
-		j = 0;
-
-	int jd = t->jd ;
-	for(i = 0; i < 12; ++i)
-	{
-		if(jd <= months[j][i])
-		{
-			t->mon = i+1;
-			t->d   = jd;
-			break;
-		}
-		else
-			jd -= months[j][i];
-	}
-	if(jd >= 1 && i == 12)
-	{
-		fprintf(stderr, "Warning: \"%s\"\n", t->KJD);
-		for(i = 0; i < 12; ++i)
-		{
-			if(jd <= months[j][i])
-			{
-				t->mon = i+1;
-				t->d   = jd;
-				break;
-			}
-			else
-				jd -= months[j][i];
-		}
-		t->y += 1;
-		//exit(0);
-	}
-	return 0;
-}
-int uni(Time *t)
-{
-	if(t->s >= 0.0)
-	{
-		t->min += ((int) (floorf(t->s))) / 60;
-		t->s    = t->s - 60.0 * (((int) (floorf(t->s))) / 60);
-	}
-	else
-	{
-		t->min += ( ((int) (floorf(t->s))) / 60  - 1 );
-		t->s    = t->s - 60.0 * (((int) (floorf(t->s))) / 60 - 1 );	
-	}
-	
-	if(t->min >= 0)
-	{
-		t->h   += t->min / 60;
-		t->min  = t->min - 60 * (t->min / 60);
-	}
-	else
-	{
-		t->h   += (t->min / 60 - 1);
-		t->min  = t->min - 60 * (t->min / 60 - 1);	
-	}
-
-	if(t->h >= 0)
-	{
-		t->jd  += t->h / 24;
-		t->h    = t->h - 24 * (t->h / 24);
-	}
-	else
-	{
-		t->jd  += t->h / 24 - 1;
-		t->h    = t->h - 24 * (t->h / 24 - 1);
-	}
-	ijd(t);
 	return 0;
 }
