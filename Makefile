@@ -13,6 +13,7 @@ INSTALL: ${OBJLIB} ${OBJEXE}
 	mv ${OBJEXE} bin
 	mkdir lib 2>&- || rm lib/* -rf 2>&-
 	mv ${OBJLIB} lib
+	rm *.o
 
 liberrmsg.a: liberrmsg.c liberrmsg.h
 	${CC} -c ${SRC}/liberrmsg.c ${CFLAGS}
