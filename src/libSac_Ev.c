@@ -88,7 +88,7 @@ evData* rdEvLst(char *filename, long *n)
         FILE *fp;
         //char Line[MAXLENGTH];
         long nEv = 0;
-        int i, c;
+        int i;
         evData *evdat;
         if ( NULL == ( fp = fopen(filename, "r")) )
         {
@@ -115,12 +115,13 @@ evData* rdEvLst(char *filename, long *n)
                         perrmsg(filename, ERR_READ_FILE);
                         exit(1);
                 }
-                //Counts Name   La    Lo    el     dp     KJD      KTIME
-                //1       JP     30    170   -12345 30     2015/04/28 00:12:13.330
-                sscanf(Line,"%d %s %f %f %f %f %s %s",
-                        &c, evdat[i].evnm,
+                //Counts Name   La    Lo    el     dp     KJD      KTIME           im m
+                //1       JP     30    170   -12345 30     2015/04/28 00:12:13.330 Ms 5.3
+                sscanf(Line,"%ld %s %f %f %f %f %s %s %s %f",
+                        &(evdat[i].evcount), evdat[i].evnm,
                         &(evdat[i].evla), &(evdat[i].evlo), &(evdat[i].evel), &(evdat[i].evdp), 
-                        evdat[i].evTime.KDATE, evdat[i].evTime.KTIME );
+                        evdat[i].evTime.KDATE, evdat[i].evTime.KTIME,
+                        evdat[i].imagtype, &(evdat[i].mag) );
                 rtime( &(evdat[i].evTime) );
         }
         fclose(fp);
@@ -139,10 +140,11 @@ int wrtEvLst(char *filename, evData *evdat, const long n)
         }
         for(i = 0; i < n; ++i)
         {
-                fprintf(fp, "%d %s %f %f %f %f %s %s\n",
-                        i+1, evdat[i].evnm,
+                fprintf(fp, "%ld %s %f %f %f %f %s %s %s %f\n",
+                        evdat[i].evcount, evdat[i].evnm,
                         (evdat[i].evla), (evdat[i].evlo), (evdat[i].evel), (evdat[i].evdp),
-                        evdat[i].evTime.KDATE, evdat[i].evTime.KTIME );
+                        evdat[i].evTime.KDATE, evdat[i].evTime.KTIME,
+                        evdat[i].imagtype, evdat[i].mag );
         }
         fclose(fp);
         return 0;
@@ -177,13 +179,14 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 taup("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
                 trvt = t[0];
                 p    = rp[0];
-                dtES = dt( &(sacdat[0].refT), &(evdat[j].evTime) );
 
+                //printf("%f %f %f %f :", evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
+                //printf("%f %f %f\n", delta,  evdat[j].evdp, trvt );
                 found = 0;
-                //printf("%f %f %f\n",delta ,dtES, trvt );
                 nlst = 0L;
                 for( i = 0; i < _sacnum; ++i )
                 {
+                        dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
                         if( (dtES + sacdat[i].b) <= (trvt + pre) &&
                             (dtES + sacdat[i].e) >= (trvt + suf)    )
                         {
@@ -223,6 +226,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 {
                         for( i = 0; i < _sacnum; ++i)
                         {
+                                dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
                                 if(
                                      (
                                         ((trvt + pre) <= (dtES + sacdat[i].e))
@@ -249,10 +253,10 @@ int fdFile(evData  *evdat,  const long _evnum ,
                         }
                 }
 
-                memset(Line, 0, MAXLENGTH);
-                sprintf(Line, "out/EV%05d", j+1);
                 if( nlst > 0L)
                 {
+                        memset(Line, 0, MAXLENGTH);
+                        sprintf(Line, "._out/EV%05ld", evdat[j].evcount);
                         ev = &(evdat[j]);
                         geneSacCmd(Line, trvt - dtES, dtES, p,
                                    pre, suf,
@@ -323,6 +327,9 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
                 fprintf(fp, "r %s.BH? \n",outfile );
+                //Add by wangsheng 2015/09/01
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");
                 return 0;
@@ -362,6 +369,9 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
                 fprintf(fp, "r %s.BH? \n",outfile );
+                //Add by wangsheng 2015/09/01
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");
                 return 0;

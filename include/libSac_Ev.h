@@ -14,8 +14,10 @@ typedef struct
 } sacData;
 typedef struct
 {
+        long  evcount;
         char  evnm[8];
-        float evla, evlo, evdp, evel;
+        float evla, evlo, evdp, evel, mag;
+        char  imagtype[4];
         Time  evTime;
 } evData;
 
@@ -69,16 +71,17 @@ int wrtSacLst(char *filename, sacData *sacdat, const long n);
  * Description:
  *   Read data from a file whose format is:
  *
- **********************************************************
- *   1 JP 30.0 170.0 -12345 30  2015/04/28 00:12:13.330   *
- *   2 US 35.0 165.0 -12345 100 2015/04/28 01:13:14.220   *
- *   3 US 35.0 165.0 -12345 100 2015/04/28 01:23:14.220   *
- *   ...                                                  *
- **********************************************************
+ ****************************************************************
+ *   1 JP 30.0 170.0 -12345 30  2015/04/28 00:12:13.330 Ms 5.3  *
+ *   2 US 35.0 165.0 -12345 100 2015/04/28 01:13:14.220 Ms 6.2  *
+ *   3 US 35.0 165.0 -12345 100 2015/04/28 01:23:14.220 Ms 7.0  *
+ *   ...                                                        *
+ ****************************************************************
  *   Its columns are 1.Counts, 2.Event name,
  *                   3.evla,   4.evlo,
  *                   5.evel,   6.evdp
  *                   7.8. origin time of the event
+ *                   9.10 magnitude
  *
  *   Help yourself to generate this format file.
  */

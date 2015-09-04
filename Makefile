@@ -1,10 +1,14 @@
 CC  = gcc
 SRC = ./src
-CFLAGS = -lm -ltaup -I/opt/ttimes -I./include -L/opt/ttimes -L./lib -Ofast -Wall
+CFLAGS = -lm -I./include -L./lib -Ofast -Wall
+CFLAGSTAUP = -ltaup -L/opt/ttimes -I/opt/ttimes -lgfortran
 BIN = ./bin
-OBJLIB = liberrmsg.a libtime.a libsph.a libSac_Ev.a
-OBJEXE = GMTime DTime GCDis cut4Ev
+OBJLIB = liberrmsg.a libtime.a libsph.a libSac_Ev.a libnumrec.a libKmean.a libsacio.a
+OBJEXE = GMTime DTime GCDis cut4Ev RpKmean NRootMerge
 VPATH = src:include
+
+.PHONY:all
+
 
 all: ${OBJLIB} ${OBJEXE}
 
@@ -31,9 +35,25 @@ libsph.a: libsph.c libsph.h liberrmsg.h
 	ranlib libsph.a
 
 libSac_Ev.a: libSac_Ev.c libSac_Ev.h liberrmsg.h libtime.h
-	${CC} -c ${SRC}/libSac_Ev.c ${CFLAGS}
+	${CC} -c ${SRC}/libSac_Ev.c ${CFLAGSTAUP} ${CFLAGS}
 	ar cq libSac_Ev.a libSac_Ev.o
 	ranlib libSac_Ev.a
+
+libnumrec.a: libnumrec.c libnumrec.h
+	${CC} -c ${SRC}/libnumrec.c ${CFLAGS}
+	ar cq libnumrec.a libnumrec.o
+	ranlib libnumrec.a
+
+libKmean.a: libKmean.c libKmean.h liberrmsg.h libsph.h libnumrec.h
+	${CC} -c ${SRC}/libKmean.c ${CFLAGS}
+	ar cq libKmean.a libKmean.o
+	ranlib libKmean.a
+
+libsacio.a: sacio.c sac.h
+	${CC} -c ${SRC}/sacio.c ${CFLAGS}
+	ar cq libsacio.a sacio.o
+	ranlib libsacio.a
+
 
 GMTime: GMTime.c libtime.a liberrmsg.a libtime.h liberrmsg.h
 	${CC} -o GMTime ${SRC}/GMTime.c libtime.a liberrmsg.a ${CFLAGS}
@@ -45,7 +65,13 @@ GCDis:  GCDis.c libsph.a liberrmsg.a libsph.h liberrmsg.h
 	${CC} -o GCDis ${SRC}/GCDis.c libsph.a liberrmsg.a ${CFLAGS}
 
 cut4Ev: cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a libSac_Ev.h libsph.h liberrmsg.h libtime.h
-	${CC} -o cut4Ev ${SRC}/cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a ${CFLAGS} -lgfortran
+	${CC} -o cut4Ev ${SRC}/cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a  ${CFLAGSTAUP} ${CFLAGS}
+
+RpKmean: RpKmean.c libKmean.a libnumrec.a liberrmsg.a libsph.a libKmean.h libnumrec.h liberrmsg.h libsph.h
+	${CC} -o RpKmean ${SRC}/RpKmean.c libKmean.a libnumrec.a liberrmsg.a libsph.a ${CFLAGS}
+
+NRootMerge: NRootMerge.c sac.h libsacio.a
+	${CC} -o NRootMerge ${SRC}/NRootMerge.c libsacio.a ${CFLAGS}
 #all: GCDis GMTime DTime cut4Ev
 #
 #GCDis: ${SRC}/GCDis.o ${SRC}/libtime.c
@@ -63,5 +89,5 @@ cut4Ev: cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a libSac_Ev.h libsp
 .PHONY:clean
 
 clean:
-	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXE}
+	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXE} lib/*
 
