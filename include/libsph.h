@@ -9,7 +9,6 @@
 #define  YES 1
 #define  NO  0
 #define  PI (atanf(1.0f) * 4.0f)
-#define  POW(x) ((x)*(x))
 typedef struct
 {
 	float x;
@@ -34,4 +33,8 @@ float DisLaLo(float evla, float evlo, float stla, float stlo);
 float Az(Point p1, Point p2); // p1-->p2
 //Calculate AZ of p1-->p2.
 float AzLaLo(float evla, float evlo, float stla, float stlo);
+#endif
+
+#ifndef POW
+#define POW(x) ((x) * (x))
 #endif

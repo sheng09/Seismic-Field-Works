@@ -32,7 +32,8 @@ float DisLaLo(float evla, float evlo, float stla, float stlo)
 	pe.lat = evla; pe.lon = evlo;
 	ps.lat = stla; ps.lon = stlo;
 	CordGeo2XYZ(&pe); CordGeo2XYZ(&ps);
-	return Dis(ps, ps);
+	//printf("%f %f %f %f: ", pe.lat, pe.lon, ps.lat, ps.lon);
+	return Dis(pe, ps);
 }
 
 float Az(Point p1, Point p2) // p1-->p2

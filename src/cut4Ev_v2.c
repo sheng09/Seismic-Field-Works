@@ -10,10 +10,11 @@
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -E event.list -D sacinfo\n\
+Usage: %-6s -C t1/t2 -E event.list -D sacinfo\n\
 \n\
-(-E) events list file\n\
-(-D) sac files info list file\n\
+(-C t1/t2)      : windows data with [Parrival+t1, Parrival+t2]\n\
+(-E event.list) : events list file\n\
+(-D sacinfo)    : sac files info list file\n\
 [-H] Display this message.\n\
 \n\
 This program is used to generate 'sacCMD.sh' bash script for select and cut sac files.\n\
@@ -23,13 +24,13 @@ Input arguments include 'event.list', which contains lists of events,and 'sacinf
 Below are introduction of the format of 'event.list' and 'sacinfo'.\n\
 event.list file format is:\n\
   ********************************************************\n\
-     1 JP 30.0 170.0 -12345 30  2015/04/28 00:12:13.330\n\
-     2 US 35.0 165.0 -12345 100 2015/04/28 01:13:14.220\n\
-     3 US 35.0 165.0 -12345 100 2015/04/28 01:23:14.220\n\
+     1 JP 30.0 170.0 -12345 30  2015/04/28 00:12:13.330  Ms 5.3\n\
+     2 US 35.0 165.0 -12345 100 2015/04/28 01:13:14.220  Ms 6.2\n\
+     3 US 35.0 165.0 -12345 100 2015/04/28 01:23:14.220  Ms 7.0\n\
      ...\n\
   ********************************************************\n\
   Its columns are 1.Counts, 2.Event name, 3.evla,   4.evlo, 5.evel,   6.evdp\n\
-                  7.8. origin time of the event\n\
+                  7.8. origin time of the event,  9.10. magnitude and its type\n\
   Help yourself to generate this format file.\n\
 \n\
 sacinfo file format is:\n\
@@ -50,6 +51,9 @@ sacinfo file format is:\n\
   Please note that 'pre-filename' corresponding to three files *.BHN, *.BHE and *.BHZ,\n\
     thus you just need to generate 'file' for *.BHZ only.\n\
 \n\
+Example:\n\
+  cut4Ev -C-10/60 -E event.list -D sacinfo\n\
+\n\
 "};
 int main(int argc, char *argv[])
 {
@@ -61,6 +65,8 @@ int main(int argc, char *argv[])
         sacData *sacdat;
         evData  *evdat;
         long nsac, nev;
+        float pre, suf;
+        int   fgpre_suf = 0;
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
         {
@@ -76,6 +82,10 @@ int main(int argc, char *argv[])
                                         strSac = argv[i+1];
                                         fgSac = 1;
                                         break;
+                                case 'C':
+                                        sscanf(argv[i+1], "%f/%f", &pre, &suf);
+                                        fgpre_suf = 1;
+                                        break;
                                 case 'O':
                                         strcpy(sacCMD, argv[i+1]);
                                         break;
@@ -86,7 +96,7 @@ int main(int argc, char *argv[])
                         }
                 }
         }
-        if(fgEv != 1 || fgSac != 1)
+        if(fgEv != 1 || fgSac != 1 || fgpre_suf != 1)
         {
                 perrmsg("",ERR_MORE_ARGS);
                 //printf("%s\n", );
@@ -95,6 +105,7 @@ int main(int argc, char *argv[])
         }
         sacdat = rdSacLst(strSac, &nsac);
         evdat  = rdEvLst(strEv, &nev);
+
         //wrtSacLst("ws_sac", sacdat, nsac);
         //wrtEvLst("ws_ev", evdat, nev);
 
@@ -104,8 +115,11 @@ int main(int argc, char *argv[])
                 exit(1);
         }
         fprintf(fp, "#!/bin/bash\n" );
+        //Add by wangsheng 2015/09/02
+        fprintf(fp, "mkdir ._out 2>&- || rm ._out/* -rf 2>&-\n");
+        //
         fprintf(fp, "sac << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, -5.0, 5.0, fp);
+        fdFile( evdat, nev, sacdat, nsac, pre, suf, fp);
         fprintf(fp, "q\nEOF\n" );
         free(sacdat);
         free(evdat);
