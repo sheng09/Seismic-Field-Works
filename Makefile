@@ -3,6 +3,7 @@ SRC = ./src
 CFLAGS = -lm -I./include -L./lib -Ofast -Wall
 CFLAGSTAUP = -ltaup -L/opt/ttimes -I/opt/ttimes -lgfortran
 BIN = ./bin
+LIB = ./lib
 OBJLIB = liberrmsg.a libtime.a libsph.a libSac_Ev.a libnumrec.a libKmean.a libsacio.a
 OBJEXE = GMTime DTime GCDis cut4Ev RpKmean NRootMerge
 VPATH = src:include
@@ -13,10 +14,10 @@ VPATH = src:include
 all: ${OBJLIB} ${OBJEXE}
 
 INSTALL: ${OBJLIB} ${OBJEXE}
-	mkdir bin 2>&- || rm bin/* -rf 2>&-
-	mv ${OBJEXE} bin
-	mkdir lib 2>&- || rm lib/* -rf 2>&-
-	mv ${OBJLIB} lib
+	mkdir ${BIN} 2>&- || rm ${BIN}/* -rf 2>&-
+	mv ${OBJEXE} ${BIN}
+	mkdir ${LIB} 2>&- || rm ${LIB}/* -rf 2>&-
+	mv ${OBJLIB} ${LIB}
 	rm *.o
 
 liberrmsg.a: liberrmsg.c liberrmsg.h
@@ -89,5 +90,5 @@ NRootMerge: NRootMerge.c sac.h libsacio.a
 .PHONY:clean
 
 clean:
-	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXE} lib/*
+	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXE} ${LIB}/*
 
