@@ -4,9 +4,10 @@ CFLAGS = -lm -I./include -L./lib -Ofast -Wall
 CFLAGSTAUP = -ltaup -L/opt/ttimes -I/opt/ttimes -lgfortran
 BIN = ./bin
 LIB = ./lib
+INC = ./include
 OBJLIB = liberrmsg.a libtime.a libsph.a libSac_Ev.a libnumrec.a libKmean.a libsacio.a
-OBJEXE = GMTime DTime GCDis cut4Ev RpKmean NRootStack
-VPATH = src:include
+OBJEXE = GMTime DTime GCDis cut4Ev RpKmean NRootStack pl_derfmod
+VPATH = ${SRC}:${INC}:${LIB}
 
 .PHONY:all
 
@@ -73,6 +74,9 @@ RpKmean: RpKmean.c libKmean.a libnumrec.a liberrmsg.a libsph.a libKmean.h libnum
 
 NRootStack: NRootStack.c sac.h libsacio.a
 	${CC} -o NRootStack ${SRC}/NRootStack.c libsacio.a ${CFLAGS}
+
+pl_derfmod: pl_derfmod.c liberrmsg.a liberrmsg.h
+	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c liberrmsg.a ${CFLAGS}
 #all: GCDis GMTime DTime cut4Ev
 #
 #GCDis: ${SRC}/GCDis.o ${SRC}/libtime.c
