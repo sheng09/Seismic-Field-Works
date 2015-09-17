@@ -10,9 +10,10 @@
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -C t1/t2 -E event.list -D sacinfo\n\
+Usage: %-6s -C t1/t2 -G deg1/deg2 -E event.list -D sacinfo\n\
 \n\
-(-C t1/t2)      : windows data with [Parrival+t1, Parrival+t2]\n\
+(-C t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
+(-G deg1/deg2)  : windows data within great circle distance [deg1, deg2]\n\
 (-E event.list) : events list file\n\
 (-D sacinfo)    : sac files info list file\n\
 [-H] Display this message.\n\
@@ -52,7 +53,7 @@ sacinfo file format is:\n\
     thus you just need to generate 'file' for *.BHZ only.\n\
 \n\
 Example:\n\
-  cut4Ev -C-10/60 -E event.list -D sacinfo\n\
+  cut4Ev -C-10/60 -G 30/90 -E event.list -D sacinfo\n\
 \n\
 "};
 int main(int argc, char *argv[])
