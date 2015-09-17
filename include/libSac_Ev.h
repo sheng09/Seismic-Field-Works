@@ -92,6 +92,7 @@ int wrtEvLst(char *filename, evData *evdat, const long n);
 int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
             const float pre, const float suf,
+            const float gcmin, const float gcmax,
             FILE *fp);
 int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                const float pre, const float suf,

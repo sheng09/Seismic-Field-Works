@@ -59,13 +59,14 @@ int main(int argc, char *argv[])
 {
         FILE *fp;
         char *strEv = NULL, *strSac = NULL;
-        int   fgEv = 0, fgSac = 0;
+        int   fgEv = 0, fgSac = 0, fggc = 0;
         int   i;
         char  sacCMD[32]="sacCMD.sh";
         sacData *sacdat;
         evData  *evdat;
         long nsac, nev;
         float pre, suf;
+        float gcmin = -180.0f, gcmax = 720.0f;
         int   fgpre_suf = 0;
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
@@ -85,6 +86,10 @@ int main(int argc, char *argv[])
                                 case 'C':
                                         sscanf(argv[i+1], "%f/%f", &pre, &suf);
                                         fgpre_suf = 1;
+                                        break;
+                                case 'G':
+                                        sscanf(argv[i+1], "%f/%f", &gcmin, &gcmax);
+                                        fggc = 1;
                                         break;
                                 case 'O':
                                         strcpy(sacCMD, argv[i+1]);
@@ -119,7 +124,7 @@ int main(int argc, char *argv[])
         fprintf(fp, "mkdir ._out 2>&- || rm ._out/* -rf 2>&-\n");
         //
         fprintf(fp, "sac << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, pre, suf, fp);
+        fdFile( evdat, nev, sacdat, nsac, pre, suf, gcmin, gcmax , fp);
         fprintf(fp, "q\nEOF\n" );
         free(sacdat);
         free(evdat);

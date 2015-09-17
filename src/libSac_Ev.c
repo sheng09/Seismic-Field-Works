@@ -158,6 +158,7 @@ static evData    *ev;
 int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
             const float pre, const float suf,
+            const float gcmin, const float gcmax,
             FILE *fp)
 {
 
@@ -176,6 +177,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
         for(j = 0; j < _evnum; ++j)
         {
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
+                if( gcmin > delta || gcmax < delta ) // Out of range
+                        continue;
                 taup("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
                 trvt = t[0];
                 p    = rp[0];
