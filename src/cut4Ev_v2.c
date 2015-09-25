@@ -6,7 +6,7 @@
 #include "libtaup.h"
 #include "liberrmsg.h"
 
-#include "libSac_Ev.h"
+#include "Sac_Ev.h"
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\

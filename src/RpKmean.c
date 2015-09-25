@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "libKmean.h"
+
 #include "liberrmsg.h"
 #include "libnumrec.h"
 #include "libsph.h"
+
+#include "Kmean.h"
 
 static char HMSG[]=
 {"\
