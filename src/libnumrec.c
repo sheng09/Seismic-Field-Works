@@ -1,9 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "libnumrec.h"
-
+#include <string.h>
 float rnd_uni(long *idum)
 /**C*F****************************************************************
 **                                                                  **
@@ -72,7 +71,6 @@ float rnd_uni(long *idum)
               return temp;
 }/*------End of rnd_uni()--------------------------*/
 
-
 float gasdev(long *idum)
 {
         static int iset = 0;
@@ -98,4 +96,96 @@ float gasdev(long *idum)
                 iset = 0;
                 return gset;
         }
+}
+
+float* linearStack(float **trace, int ntrace, int len, float **ak)
+{
+        int i, j;
+        float *x;
+        memset(*ak, len, sizeof(float));
+        for( i = 0; i < ntrace; ++i)
+        {
+                x = trace[i];
+                for(j = 0; j < len; ++j)
+                {
+                        (*ak)[j] += x[j];
+                }
+        }
+        for( j = 0 ; j < len; ++j)
+        {
+                (*ak)[j] /= (float) (ntrace);
+        }
+        return *ak;
+}
+
+float* nrootStack(float **trace, int ntrace, int len, float **ak, float NRoot)
+{
+        int i, j;
+        float *x;
+        memset(*ak, len, sizeof(float));
+        if( NRoot == 1.0f )
+        {
+                linearStack(trace, ntrace, len, ak);
+                return *ak;
+        }
+        for( i = 0; i < ntrace; ++i)
+        {
+                x = trace[i];
+                for(j = 0; j < len; ++j)
+                {
+                        if(x[j] > 1.0e-6f)
+                        {
+                                (*ak)[j] += (expf(logf( fabsf(x[j]) ) / NRoot ) ) * ( x[j] / fabsf(x[j]) );
+                        }
+                }
+        }
+        for( j = 0 ; j < len; ++j)
+        {
+                (*ak)[j] /= (float) (ntrace);
+                (*ak)[j] = powf(fabsf( (*ak)[j] ), NRoot - 1.0) * (*ak)[j];
+        }
+        return *ak;
+}
+
+
+//Integral for given 'trace' from 'pre' to 'suf' using trapezoid method
+float integf(float *trace, int pre, int suf, float dx)
+{
+    float ak = 0.5f * (trace[pre] + trace[suf]);
+    int i;
+    for( i = pre +1 ; i < suf; ++i )
+        ak += trace[i];
+    ak *= dx;
+    return ak;
+}
+
+//Find the max value of given 'trace', and its 'index'
+float fdmaxf(float *trace, int len, int *index)
+{
+    int i;
+    float max = trace[0];
+    for( i = 1; i < len; ++i)
+    {
+        if( max < trace[i] )
+        {
+            *index = i;
+            max = trace[i];
+        }
+    }
+    return max;
+}
+
+//Correlation for two vector
+float corf(float *trace1, float *trace2, int len)
+{
+    int i;
+    float ak = 0.0f, ac1 = 0.0f, ac2 = 0.0f ;
+    for(i = 0; i < len; ++i)
+    {
+        ak  += trace1[i] * trace2[i];
+        ac1 += trace1[i] * trace1[i];
+        ac2 += trace2[i] * trace2[i];
+    }
+    ak *= sqrtf(1.0f/ ac1 / ac2);
+    return ak;
 }
