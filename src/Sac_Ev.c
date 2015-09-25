@@ -6,7 +6,7 @@
 #include "libtaup.h"
 #include "liberrmsg.h"
 
-#include "libSac_Ev.h"
+#include "Sac_Ev.h"
 
 static char Line[MAXLENGTH];
 sacData* rdSacLst(char *filename, long *n)
@@ -151,6 +151,7 @@ int wrtEvLst(char *filename, evData *evdat, const long n)
 }
 
 
+static int       ISHead, ISTail;
 static sacData   *lst[MERGEMAX];
 static long      nlst;
 static evData    *ev;
@@ -192,10 +193,21 @@ int fdFile(evData  *evdat,  const long _evnum ,
                         dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
                         if( (dtES + sacdat[i].b) <= (trvt + pre) &&
                             (dtES + sacdat[i].e) >= (trvt + suf)    )
+                            //                              B  SAC FILE     E
+                            // ----------------O------------|********A******|---------
+                            //                 |<--     trvt      -->|
+                            // ---------------------------------|********|------------
+                            //                              trvt+pre    trvt+suf
                         {
                                 lst[nlst] = &( sacdat[i] );
                                 nlst  = 1L;
                                 found = 1;
+                                //Add by wangsheng 2015/09/18
+                                //For debug
+                                #ifdef DEBUG
+                                    fprintf(fp, "# Just one: %f %f %f %f\n", delta, evdat[j].evdp, trvt, dtES);
+                                #endif
+                                ////////////////////
                                 break;
                         }
                         /*{
@@ -227,33 +239,100 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 }
                 if( found != 1)
                 {
+                        ISHead = 0;
+                        ISTail = 0;
                         for( i = 0; i < _sacnum; ++i)
                         {
                                 dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
+                                /*
                                 if(
                                      (
+                                        //                              B   SAC FILE    E
+                                        // ----------------O------------|************A**|---------
+                                        //                 |<--          trvt        -->|
+                                        // ---------------------------------------|**********|----
+                                        //                                    trvt+pre    trvt+suf
                                         ((trvt + pre) <= (dtES + sacdat[i].e))
                                         &&
                                         ((trvt + suf) >= (dtES + sacdat[i].e))
                                      )
                                      ||
                                      (
+                                        //                              B  SAC FILE     E
+                                        // ----------------O------------|**A************|---------
+                                        //                 |<--   trvt  -->|
+                                        // -------------------------|**********|------------------
+                                        //                       trvt+pre    trvt+suf
+                                        ((trvt + pre) <= (dtES + sacdat[i].b))
+                                        &&
+                                        ((trvt + suf) >= (dtES + sacdat[i].b))
+                                     )
+                                     ||
+                                     (
+                                        //                              B  SAC FILE     E
+                                        // ----------------O------------|********A******|---------
+                                        //                 |<--     trvt      -->|
+                                        // -------------------------|************************|----
+                                        //                        trvt+pre                trvt+suf
                                         ((trvt + pre) <= (dtES + sacdat[i].b))
                                         &&
                                         ((trvt + suf) >= (dtES + sacdat[i].e))
                                      )
-                                     ||
-                                     (
-                                        ((trvt + pre) <= (dtES + sacdat[i].e))
-                                        &&
-                                        ((trvt + suf) >= (dtES + sacdat[i].e))
-                                     )
-                                  )
+                                  )*/
+                                //Revised by wangsheng 2015/09/18
+                                if(
+                                            //                              B   SAC FILE    E
+                                            // ----------------O------------|************A**|---------
+                                            //                 |<--          trvt        -->|
+                                            // ---------------------------------------|**********|----
+                                            //                                    trvt+pre    trvt+suf
+                                            ((trvt + pre) <= (dtES + sacdat[i].e))
+                                            &&
+                                            ((trvt + suf) >= (dtES + sacdat[i].e))
+                                   )
+                                {
+                                        ISHead = 1;
+                                        lst[nlst] = &( sacdat[i] );
+                                        ++nlst;
+                                }
+                                else if(
+                                            //                              B  SAC FILE     E
+                                            // ----------------O------------|**A************|---------
+                                            //                 |<--   trvt  -->|
+                                            // -------------------------|**********|------------------
+                                            //                       trvt+pre    trvt+suf
+                                            ((trvt + pre) <= (dtES + sacdat[i].b))
+                                            &&
+                                            ((trvt + suf) >= (dtES + sacdat[i].b))
+                                        )
+                                {
+                                        ISTail = 1;
+                                        lst[nlst] = &( sacdat[i] );
+                                        ++nlst;
+                                }
+                                else if(
+                                            //                              B  SAC FILE     E
+                                            // ----------------O------------|********A******|---------
+                                            //                 |<--     trvt      -->|
+                                            // -------------------------|************************|----
+                                            //                        trvt+pre                trvt+suf
+                                            ((trvt + pre) <= (dtES + sacdat[i].b))
+                                            &&
+                                            ((trvt + suf) >= (dtES + sacdat[i].e))
+                                        )
                                 {
                                         lst[nlst] = &( sacdat[i] );
                                         ++nlst;
                                 }
                         }
+                        if( ISHead != 1 || ISTail != 1)
+                                continue;
+                        //Add by wangsheng 2015/09/18
+                        //For debug
+                        #ifdef DEBUG
+                        fprintf(fp, "# %d %d\n", ISHead, ISTail);
+                        fprintf(fp, "# More than one: %d %f %f %f %f\n", nlst, delta, evdat[j].evdp, trvt, dtES);
+                        #endif
                 }
 
                 if( nlst > 0L)
@@ -261,6 +340,17 @@ int fdFile(evData  *evdat,  const long _evnum ,
                         memset(Line, 0, MAXLENGTH);
                         sprintf(Line, "._out/EV%05ld", evdat[j].evcount);
                         ev = &(evdat[j]);
+
+                        //Add by wangsheng 2015/09/18
+                        //For Debug
+                        #ifdef DEBUG
+                        fprintf(fp, "# %s\n", lst[0]->sacnm);
+                        fprintf(fp, "# SACTIME: %04d/%02d/%02d %02d:%02d:%02d.%03d\n", lst[0]->refT.year, lst[0]->refT.mon, lst[0]->refT.day, 
+                                                       lst[0]->refT.hour, lst[0]->refT.min, lst[0]->refT.sec, lst[0]->refT.msec);
+                        fprintf(fp, "# EVTIME: %04d/%02d/%02d %02d:%02d:%02d.%03d\n", ev->evTime.year, ev->evTime.mon, ev->evTime.day,
+                                                       ev->evTime.hour, ev->evTime.min, ev->evTime.sec, ev->evTime.msec);
+                        #endif
+                        /////////////////
                         geneSacCmd(Line, trvt - dtES, dtES, p,
                                    pre, suf,
                                    fp );
