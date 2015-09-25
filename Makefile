@@ -1,98 +1,92 @@
 CC  = gcc
 SRC = ./src
-CFLAGS = -lm -I./include -L./lib -Ofast -Wall
-CFLAGSTAUP = -ltaup -L/opt/ttimes -I/opt/ttimes -lgfortran
+#CFLAGS = -lm -I./include -L./lib -L. -Ofast -Wall
+CFLAGS = -ltaup -L/opt/ttimes -L./lib -L. -I/opt/ttimes -I./include -lgfortran -lm -Ofast -Wall
 BIN = ./bin
 LIB = ./lib
 INC = ./include
-OBJLIB = liberrmsg.a libtime.a libsph.a libSac_Ev.a libnumrec.a libKmean.a libsacio.a
-OBJEXE = GMTime DTime GCDis cut4Ev RpKmean NRootStack pl_derfmod
+
+OBJ     = Sac_Ev.o Kmean.o
+OBJLIB  = liberrmsg.a libtime.a libsph.a  libnumrec.a libsacio.a
+OBJEXEC = GMTime DTime GCDis cut4Ev RpKmean clusterRPBaz NRootStack pl_derfmod
 VPATH = ${SRC}:${INC}:${LIB}
 
 .PHONY:all
 
+all: ${OBJLIB} ${OBJEXEC}
 
-all: ${OBJLIB} ${OBJEXE}
+.PHONY:lib
 
-INSTALL: ${OBJLIB} ${OBJEXE}
+lib: ${OBJLIB}
+
+.PHONY:exec
+
+exec: ${OBJEXEC}
+
+INSTALL: ${OBJLIB} ${OBJEXEC}
 	mkdir ${BIN} 2>&- || rm ${BIN}/* -rf 2>&-
-	mv ${OBJEXE} ${BIN}
+	mv ${OBJEXEC} ${BIN}
 	mkdir ${LIB} 2>&- || rm ${LIB}/* -rf 2>&-
 	mv ${OBJLIB} ${LIB}
 	rm *.o
 
+#Lib for error message
 liberrmsg.a: liberrmsg.c liberrmsg.h
 	${CC} -c ${SRC}/liberrmsg.c ${CFLAGS}
 	ar cq  liberrmsg.a liberrmsg.o
 	ranlib liberrmsg.a
 
+#Lib for time processing
 libtime.a: libtime.c libtime.h liberrmsg.h
 	${CC} -c ${SRC}/libtime.c ${CFLAGS}
 	ar cq libtime.a libtime.o
 	ranlib libtime.a
 
+#Lib for math calculation in spherical coordinates
 libsph.a: libsph.c libsph.h liberrmsg.h
 	${CC} -c ${SRC}/libsph.c ${CFLAGS}
 	ar cq libsph.a libsph.o
 	ranlib libsph.a
 
-libSac_Ev.a: libSac_Ev.c libSac_Ev.h liberrmsg.h libtime.h
-	${CC} -c ${SRC}/libSac_Ev.c ${CFLAGSTAUP} ${CFLAGS}
-	ar cq libSac_Ev.a libSac_Ev.o
-	ranlib libSac_Ev.a
-
+#Lib for numerical recipe
 libnumrec.a: libnumrec.c libnumrec.h
 	${CC} -c ${SRC}/libnumrec.c ${CFLAGS}
 	ar cq libnumrec.a libnumrec.o
 	ranlib libnumrec.a
 
-libKmean.a: libKmean.c libKmean.h liberrmsg.h libsph.h libnumrec.h
-	${CC} -c ${SRC}/libKmean.c ${CFLAGS}
-	ar cq libKmean.a libKmean.o
-	ranlib libKmean.a
-
+#Lib for sac IO
 libsacio.a: sacio.c sac.h
 	${CC} -c ${SRC}/sacio.c ${CFLAGS}
 	ar cq libsacio.a sacio.o
 	ranlib libsacio.a
 
 
-GMTime: GMTime.c libtime.a liberrmsg.a libtime.h liberrmsg.h
-	${CC} -o GMTime ${SRC}/GMTime.c libtime.a liberrmsg.a ${CFLAGS}
+GMTime: GMTime.c libtime.h liberrmsg.h
+	${CC} -o GMTime ${SRC}/GMTime.c -ltime -lerrmsg ${CFLAGS}
 
-DTime:  DTime.c libtime.a liberrmsg.a libtime.h liberrmsg.h
-	${CC} -o DTime ${SRC}/DTime.c libtime.a liberrmsg.a ${CFLAGS}
+DTime:  DTime.c  libtime.h liberrmsg.h
+	${CC} -o DTime ${SRC}/DTime.c -ltime -lerrmsg ${CFLAGS}
 
-GCDis:  GCDis.c libsph.a liberrmsg.a libsph.h liberrmsg.h
-	${CC} -o GCDis ${SRC}/GCDis.c libsph.a liberrmsg.a ${CFLAGS}
+GCDis:  GCDis.c  libsph.h liberrmsg.h
+	${CC} -o GCDis ${SRC}/GCDis.c -lsph -lerrmsg ${CFLAGS}
 
-cut4Ev: cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a libSac_Ev.h libsph.h liberrmsg.h libtime.h
-	${CC} -o cut4Ev ${SRC}/cut4Ev_v2.c libSac_Ev.a libsph.a liberrmsg.a libtime.a  ${CFLAGSTAUP} ${CFLAGS}
+cut4Ev: cut4Ev_v2.c Sac_Ev.h Sac_Ev.o libsph.h liberrmsg.h libtime.h
+	${CC} -o cut4Ev ${SRC}/cut4Ev_v2.c Sac_Ev.o  -lsph -lerrmsg -ltime ${CFLAGS}
 
-RpKmean: RpKmean.c libKmean.a libnumrec.a liberrmsg.a libsph.a libKmean.h libnumrec.h liberrmsg.h libsph.h
-	${CC} -o RpKmean ${SRC}/RpKmean.c libKmean.a libnumrec.a liberrmsg.a libsph.a ${CFLAGS}
+RpKmean: RpKmean.c Kmean.o Kmean.h libnumrec.h liberrmsg.h libsph.h
+	${CC} -o RpKmean ${SRC}/RpKmean.c Kmean.o -lnumrec -lerrmsg -lsph ${CFLAGS}
 
-NRootStack: NRootStack.c sac.h libsacio.a
-	${CC} -o NRootStack ${SRC}/NRootStack.c libsacio.a ${CFLAGS}
+clusterRPBaz: clusterRPBaz.c liberrmsg.h
+	${CC} -o clusterRPBaz ${SRC}/clusterRPBaz.c -lerrmsg ${CFLAGS}
 
-pl_derfmod: pl_derfmod.c liberrmsg.a liberrmsg.h
-	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c liberrmsg.a ${CFLAGS}
-#all: GCDis GMTime DTime cut4Ev
-#
-#GCDis: ${SRC}/GCDis.o ${SRC}/libtime.c
-#	${CC} ${SRC}/GCDis.o ${SRC}/libtime.c -o ${BIN}/GCDis ${CFLAGS}
-#
-#GMTime: ${SRC}/GMTime.o ${SRC}/libtime.c
-#	${CC} ${SRC}/GMTime.o ${SRC}/libtime.c -o ${BIN}/GMTime ${CFLAGS}
-#
-#DTime:  ${SRC}/DTime.o ${SRC}/libtime.c
-#	${CC} ${SRC}/DTime.o ${SRC}/libtime.c -o ${BIN}/DTime ${CFLAGS}
-#
-#cut4Ev:  ${SRC}/cut4Ev.o
-#	${CC} ${SRC}/cut4Ev.o -o ${BIN}/cut4Ev ${CFLAGS}
-#
+NRootStack: NRootStack.c sac.h libnumrec.h
+	${CC} -o NRootStack ${SRC}/NRootStack.c  -lnumrec -lsacio ${CFLAGS}
+
+pl_derfmod: pl_derfmod.c liberrmsg.h
+	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c -lerrmsg ${CFLAGS}
+
 .PHONY:clean
 
 clean:
-	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXE} ${LIB}/*
+	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXEC} ${LIB}/* 2>&-
 
