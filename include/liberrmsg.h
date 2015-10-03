@@ -15,6 +15,7 @@
 #define     ERR_TIME_OUT   10L  /* Communication time out   */
 #define     ERR_MORE_ARGS  11L  /* More arguments are required */
 #define     ERR_ALC_MEM    12L  /* Allocate memory failed */
+#define     WARN_OUT_RANGE 13L  /* Data is out of range     */
 
 typedef long ERR_TYPE;
 // 打印出错信息函数

@@ -15,7 +15,8 @@ char* errmsg[] = {
     /* 9 */       "Bad configuration file format",
     /* 10 */      "Communication time out",
     /* 11 */      "More arguments are required",
-    /* 12 */      "Allocate memory failed"
+    /* 12 */      "Allocate memory failed",
+    /* 13 */      "Data is out of range"
 };
 
 // 打印出错信息函数
