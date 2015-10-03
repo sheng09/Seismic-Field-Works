@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
 		{
 			//fprintf(fpout, ">%d %d\n", j++, i);
 			fprintf(fpout, "> %d %d\n", ++j, ngrp[i]);
+			fprintf(fpout, "> %d %d\n", ++j, ngrp[i]);
 			stmp = grpHdr[i];
 			for(;stmp != NULL;)
 			{
