@@ -6,13 +6,14 @@
 #include "libtaup.h"
 #include "liberrmsg.h"
 
-#include "libSac_Ev.h"
+#include "Sac_Ev.h"
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -C t1/t2 -E event.list -D sacinfo\n\
+Usage: %-6s -C t1/t2 -G deg1/deg2 -E event.list -D sacinfo\n\
 \n\
-(-C t1/t2)      : windows data with [Parrival+t1, Parrival+t2]\n\
+(-C t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
+(-G deg1/deg2)  : windows data within great circle distance [deg1, deg2]\n\
 (-E event.list) : events list file\n\
 (-D sacinfo)    : sac files info list file\n\
 [-H] Display this message.\n\
@@ -52,20 +53,21 @@ sacinfo file format is:\n\
     thus you just need to generate 'file' for *.BHZ only.\n\
 \n\
 Example:\n\
-  cut4Ev -C-10/60 -E event.list -D sacinfo\n\
+  cut4Ev -C-10/60 -G 30/90 -E event.list -D sacinfo\n\
 \n\
 "};
 int main(int argc, char *argv[])
 {
         FILE *fp;
         char *strEv = NULL, *strSac = NULL;
-        int   fgEv = 0, fgSac = 0;
+        int   fgEv = 0, fgSac = 0, fggc = 0;
         int   i;
         char  sacCMD[32]="sacCMD.sh";
         sacData *sacdat;
         evData  *evdat;
         long nsac, nev;
         float pre, suf;
+        float gcmin = -180.0f, gcmax = 720.0f;
         int   fgpre_suf = 0;
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
@@ -85,6 +87,10 @@ int main(int argc, char *argv[])
                                 case 'C':
                                         sscanf(argv[i+1], "%f/%f", &pre, &suf);
                                         fgpre_suf = 1;
+                                        break;
+                                case 'G':
+                                        sscanf(argv[i+1], "%f/%f", &gcmin, &gcmax);
+                                        fggc = 1;
                                         break;
                                 case 'O':
                                         strcpy(sacCMD, argv[i+1]);
@@ -119,7 +125,7 @@ int main(int argc, char *argv[])
         fprintf(fp, "mkdir ._out 2>&- || rm ._out/* -rf 2>&-\n");
         //
         fprintf(fp, "sac << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, pre, suf, fp);
+        fdFile( evdat, nev, sacdat, nsac, pre, suf, gcmin, gcmax , fp);
         fprintf(fp, "q\nEOF\n" );
         free(sacdat);
         free(evdat);

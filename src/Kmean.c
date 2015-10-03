@@ -4,9 +4,10 @@
 #include <string.h>
 #include "liberrmsg.h"
 
-#include "libKmean.h"
 #include "libsph.h"
 #include "libnumrec.h"
+
+#include "Kmean.h"
 
 int minmax(Prj_Kmean *prj)
 {

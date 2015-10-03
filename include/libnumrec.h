@@ -19,8 +19,27 @@
 float rnd_uni(long *idum);
 
 float gasdev(long *idum);
+
+#define MIN(x,y) ( (x)>(y) ? (y) : (x) )
+#define MAX(x,y) ( (x)>(y) ? (x) : (y) )
+
+//Linear stack
+float* linearStack(float **trace, int ntrace, int len, float **ak);
+//NRoot stack
+float* nrootStack(float **trace, int ntrace, int len, float **ak, float NRoot);
+
+
+//Integral for given 'trace' from 'pre' to 'suf' using trapezoid method
+float integf(float *trace, int pre, int suf, float dx);
+//Find the max value of given 'trace', and its 'index'
+float fdmaxf(float *trace, int len, int *index);
+//Correlation for two vector
+float corf(float *trace1, float *trace2, int len);
+
+
 #endif
 
 #ifndef POW
 #define POW(x) ( (x) * (x) )
 #endif
+
