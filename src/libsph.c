@@ -14,6 +14,9 @@ void   CordGeo2XYZ(Point *p)
 }
 void   CordXYZ2Geo(Point *p)
 {
+	float lxy = sqrtf( POW(p->x) + POW(p->y) );
+	p->lon =  atan2f(p->y, p->x) / PI * 180.0f;
+	p->lat =  atan2f(p->z, lxy)  / PI * 180.0f;
 	return;
 }
 float Dis(Point pE, Point pS)
@@ -58,4 +61,46 @@ float AzLaLo(float evla, float evlo, float stla, float stlo)
 	ps.lat = stla; ps.lon = stlo;
 	CordGeo2XYZ(&pe); CordGeo2XYZ(&ps);
 	return Az(pe,ps);
+}
+
+//cross pruduct of n1 and n2. In xyz coordinates
+void vecCross(vector3d *n1, vector3d *n2, vector3d *ak)
+{
+	float len;
+	ak->vx = n1->vy * n2->vz - n1->vz * n2->vy;
+	ak->vy = n1->vz * n2->vx - n1->vx * n2->vz;
+	ak->vz = n1->vx * n2->vy - n1->vy * n2->vx;
+	len = sqrtf( POW(ak->vx ) + POW(ak->vy) + POW(ak->vz) ) ;
+	ak->vx /= len;
+	ak->vy /= len;
+	ak->vz /= len;
+	return ;
+}
+
+//direction of the great circle cross p1 and p2.
+void dirCircle(Point *p1, Point *p2, Point *ak)
+{
+	vector3d v1, v2, v;
+	v1.vx = p1->x;  v2.vx = p2->x;
+	v1.vy = p1->y;  v2.vy = p2->y;
+	v1.vz = p1->z;  v2.vz = p2->z;
+	vecCross(&v1, &v2, &v);
+	ak->x = v.vx;
+	ak->y = v.vy;
+	ak->z = v.vz;
+	CordXYZ2Geo(ak);
+	return ;
+}
+//direction of the great circle cross p1 and p2.
+void dirCircleLaLo(float lo1, float la1, float lo2, float la2, float *lo, float *la )
+{
+	Point p1, p2, p;
+	p1.lat = la1; p1.lon = lo1;
+	p2.lat = la2; p2.lon = lo2;
+	CordGeo2XYZ(&p1);
+	CordGeo2XYZ(&p2);
+	dirCircle(&p1, &p2, &p);
+	*lo = p.lon;
+	*la = p.lat;
+	return ;
 }

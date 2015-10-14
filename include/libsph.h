@@ -21,6 +21,13 @@ typedef struct
 	float t;
 }Point;
 
+typedef struct
+{
+	float vx;
+	float vy;
+	float vz;
+}vector3d;
+
 //Transfrom Geo coordinates to XYZ
 void   CordGeo2XYZ(Point *p);
 //Transfrom XYZ coordinates to Geo
@@ -33,6 +40,13 @@ float DisLaLo(float evla, float evlo, float stla, float stlo);
 float Az(Point p1, Point p2); // p1-->p2
 //Calculate AZ of p1-->p2.
 float AzLaLo(float evla, float evlo, float stla, float stlo);
+
+//cross pruduct of n1 and n2. In xyz coordinates
+void vecCross(vector3d *n1, vector3d *n2, vector3d *ak);
+//direction of the great circle cross p1 and p2.
+void dirCircle(Point *p1, Point *p2, Point *ak);
+//direction of the great circle cross p1 and p2.
+void dirCircleLaLo(float lo1, float la1, float lo2, float la2, float *lo, float *la );
 #endif
 
 #ifndef POW
