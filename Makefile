@@ -8,26 +8,20 @@ INC = ./include
 
 OBJ     = Sac_Ev.o Kmean.o
 OBJLIB  = liberrmsg.a libtime.a libsph.a  libnumrec.a libsacio.a
-OBJEXEC = GMTime DTime GCDis cut4Ev RpKmean clusterRPBaz NRootStack pl_derfmod
+OBJEXEC = GMTime DTime GCDis cut4Ev RpKmean clusterRPBaz NRootStack pl_derfmod spDis
 VPATH = ${SRC}:${INC}:${LIB}
 
 .PHONY:all
 
 all: ${OBJLIB} ${OBJEXEC}
 
-.PHONY:lib
+.PHONY:install
 
-lib: ${OBJLIB}
-
-.PHONY:exec
-
-exec: ${OBJEXEC}
-
-INSTALL: ${OBJLIB} ${OBJEXEC}
-	mkdir ${BIN} 2>&- || rm ${BIN}/* -rf 2>&-
-	mv ${OBJEXEC} ${BIN}
+install: ${lib} ${exec}
 	mkdir ${LIB} 2>&- || rm ${LIB}/* -rf 2>&-
 	mv ${OBJLIB} ${LIB}
+	mkdir ${BIN} 2>&- || rm ${BIN}/* -rf 2>&-
+	mv ${OBJEXEC} ${BIN}
 	rm *.o
 
 #Lib for error message
@@ -54,7 +48,7 @@ libnumrec.a: libnumrec.c libnumrec.h
 	ar cq libnumrec.a libnumrec.o
 	ranlib libnumrec.a
 
-#Lib for sac IO
+#Lib for sac IO. Program is from Zhu Lupei
 libsacio.a: sacio.c sac.h
 	${CC} -c ${SRC}/sacio.c ${CFLAGS}
 	ar cq libsacio.a sacio.o
@@ -69,6 +63,9 @@ DTime:  DTime.c  libtime.h liberrmsg.h
 
 GCDis:  GCDis.c  libsph.h liberrmsg.h
 	${CC} -o GCDis ${SRC}/GCDis.c -lsph -lerrmsg ${CFLAGS}
+
+spDis: spDis.c libsph.h liberrmsg.h
+	${CC} -o spDis ${SRC}/spDis.c -lsph -lerrmsg ${CFLAGS}
 
 cut4Ev: cut4Ev_v2.c Sac_Ev.h Sac_Ev.o libsph.h liberrmsg.h libtime.h
 	${CC} -o cut4Ev ${SRC}/cut4Ev_v2.c Sac_Ev.o  -lsph -lerrmsg -ltime ${CFLAGS}
@@ -88,5 +85,5 @@ pl_derfmod: pl_derfmod.c liberrmsg.h
 .PHONY:clean
 
 clean:
-	-rm ${BIN}/* ${SRC}/*.o ${OBJLIB} ${OBJEXEC} ${LIB}/* 2>&-
+	-@rm ${BIN}/* ${SRC}/*.o *.o ${OBJLIB} ${OBJEXEC} ${LIB}/* ${BIN} ${LIB} -rf 2>&-
 
