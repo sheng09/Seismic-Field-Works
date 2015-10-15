@@ -3,7 +3,7 @@
 #include <string.h>
 #include "libtime.h"
 #include "libsph.h"
-#include "libtaup.h"
+#include "libctau.h"
 #include "liberrmsg.h"
 
 #include "Sac_Ev.h"
@@ -180,7 +180,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
-                taup("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                ctau("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
                 trvt = t[0];
                 p    = rp[0];
 

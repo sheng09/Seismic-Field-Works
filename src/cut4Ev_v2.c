@@ -3,7 +3,7 @@
 #include <string.h>
 #include "libtime.h"
 #include "libsph.h"
-#include "libtaup.h"
+#include "libctau.h"
 #include "liberrmsg.h"
 
 #include "Sac_Ev.h"

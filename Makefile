@@ -1,7 +1,7 @@
 CC  = gcc
 SRC = ./src
 #CFLAGS = -lm -I./include -L./lib -L. -Ofast -Wall
-CFLAGS = -ltaup -L/opt/ttimes -L./lib -L. -I/opt/ttimes -I./include -lgfortran -lm -Ofast -Wall
+CFLAGS = -lctau -L/opt/ttimes/lib -L./lib -L. -I/opt/ttimes/inc -I./include -lgfortran -lm -Ofast -Wall
 BIN = ./bin
 LIB = ./lib
 INC = ./include
