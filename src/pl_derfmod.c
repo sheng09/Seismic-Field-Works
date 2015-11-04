@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
             ;
         ++i )
     {
-        if(i % 5 == 0)
+        if(i % 2 == 0)
         {
             fprintf(FPoutVSMod, "> -Z%f\n",InvMod.obj/ObjSTD);
             fprintf(FPoutVPMod, "> -Z%f\n",InvMod.obj/ObjSTD);
