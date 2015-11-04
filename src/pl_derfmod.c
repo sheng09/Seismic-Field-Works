@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
             }
         }
     }
-    if(fMod == 0 || fDeb == 0 || fLog == 0 || fBestMod == 0 || foutVSMod == 0 || foutVPMod == 0 || foutObj == 0 || fnhead == 0)
+    if( fMod == 0 || fDeb == 0 || fLog == 0 || fBestMod == 0 ||
+        foutVSMod == 0 || foutVPMod == 0 || foutObj == 0 || fnhead == 0 ||
+        foutVPR   == 0 || foutVSR == 0)
     {
         perrmsg("",ERR_MORE_ARGS);
         fprintf(stderr, HMSG,argv[0]);
@@ -271,11 +273,11 @@ int main(int argc, char *argv[])
     for(j = mod.nl; j >= 0; --j)
     {
         vs = (upper.la)[j].vp / (upper.la)[j].k;
-        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthTop);
         fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthBot);
+        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthTop);
 
-        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthTop);
         fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthBot);
+        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthTop);
     }
 
     // The late model is not the best model. Read the best model from the file 2015/09/17
@@ -315,6 +317,8 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
     char line[1024];
     int i;
     float depth = 0.0;
+    float depthL = 0.0;
+    float depthU = 0.0;
     //Read MOD
     if( NULL == fgets(line, 1024, fpMod)) exit(1);
     if( NULL == fgets(line, 1024, fpMod)) exit(1);
@@ -380,12 +384,15 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
         (upper->la)[i].vp       = (mod->la)[i].vp    + (deb->la)[i].vp    ;
         (upper->la)[i].B        = (mod->la)[i].B     + (deb->la)[i].B     ;
         (upper->la)[i].C        = (mod->la)[i].C     + (deb->la)[i].C     ;
-        (upper->la)[i].k        = (mod->la)[i].k     + (deb->la)[i].k     ;
+        (upper->la)[i].k        = (mod->la)[i].k     - (deb->la)[i].k     ;
         (upper->la)[i].E        = (mod->la)[i].E     + (deb->la)[i].E     ;
         (upper->la)[i].rho      = (mod->la)[i].rho   + (deb->la)[i].rho   ;
         (upper->la)[i].NSL      = (mod->la)[i].NSL   + (deb->la)[i].NSL   ;
-        (upper->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
-        (upper->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        //(upper->la)[i].depthTop = (mod->la)[i].depthTop - (deb->la)[i].h     ;
+        //(upper->la)[i].depthBot = (mod->la)[i].depthBot - (deb->la)[i].h     ;
+        (upper->la)[i].depthTop = depthU;
+        depthU                  = (mod->la)[i].h - (deb->la)[i].h;
+        (upper->la)[i].depthBot = depthU;
 
         (lowwer->la)[i].theta   = (mod->la)[i].theta - (deb->la)[i].theta ;
         (lowwer->la)[i].fai     = (mod->la)[i].fai   - (deb->la)[i].fai   ;
@@ -393,12 +400,17 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
         (lowwer->la)[i].vp      = (mod->la)[i].vp    - (deb->la)[i].vp    ;
         (lowwer->la)[i].B       = (mod->la)[i].B     - (deb->la)[i].B     ;
         (lowwer->la)[i].C       = (mod->la)[i].C     - (deb->la)[i].C     ;
-        (lowwer->la)[i].k       = (mod->la)[i].k     - (deb->la)[i].k     ;
+        (lowwer->la)[i].k       = (mod->la)[i].k     + (deb->la)[i].k     ;
         (lowwer->la)[i].E       = (mod->la)[i].E     - (deb->la)[i].E     ;
         (lowwer->la)[i].rho     = (mod->la)[i].rho   - (deb->la)[i].rho   ;
         (lowwer->la)[i].NSL     = (mod->la)[i].NSL   - (deb->la)[i].NSL   ;
-        (lowwer->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
-        (lowwer->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        //(lowwer->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
+        //(lowwer->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        (lowwer->la)[i].depthTop = depthL;
+        depthL                   = (mod->la)[i].h + (deb->la)[i].h;
+        (lowwer->la)[i].depthBot = depthL;
+
+        //printf("%d %f %f %f %f %f\n",i, (lowwer->la)[i].depthTop, (lowwer->la)[i].depthBot,(mod->la)[i].depthTop, (mod->la)[i].depthBot, (deb->la)[i].h);
     }
     return 0;
 }
