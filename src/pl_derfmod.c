@@ -24,19 +24,23 @@ typedef  struct
 }MOD;
 
 char HMSG[]="\
-Usage: %s -MKMI.1.mod -DKMI.1.mod.deb -LKMI.1.log -BKMI.1.best -OKMI.1.xy -JKMI.1.obj -E<n heads>\n\
+Usage: %s -MKMI.1.mod -DKMI.1.mod.deb -LKMI.1.log -BKMI.1.best -E<n heads>\\\n\
+          -PKMI.vp.m -SKMI.vs.m -JKMI.1.obj -OKMI.1.xy \\\n\
+          -pKMI.vpr  -sKMI.vpr\n\
 \n\
 Input files arguments:\n\
 -M initial model for inversion\n\
 -D deviation model for inversion\n\
 -L log file of DERF-inversion\n\
 -B best model\n\
+-E number of heads to jump\n\
 \n\
 Output files arguments\n\
 -S output  vs-model file for GMT plot\n\
 -P output  vp-model file for GMT plot\n\
+-s output  vs-model rangle for GMT plot\n\
+-p ouput   vp-model rangle for GMT plot\n\
 -J output object value file for GMT plot\n\
--E number of heads to jump\n\
 ";
 
 int readMod( FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lowwer);
@@ -46,8 +50,10 @@ int readLog(FILE *FPLog, MOD *mod, int nl);
 int main(int argc, char *argv[])
 {
     int   fMod = 0, fDeb = 0, fLog = 0, foutVSMod = 0, foutVPMod = 0,foutObj = 0, fBestMod = 0, fnhead = 0;
+    int   foutVSR=0, foutVPR=0;
     char *strMod = NULL, *strModDeb = NULL, *strLog = NULL, *stroutVSMod = NULL, *stroutVPMod =NULL, *stroutObj = NULL, *strBestMod = NULL;
-    FILE *FPMod, *FPModDeb, *FPLog, *FPoutVSMod, *FPoutVPMod, *FPoutObj, *FPBestMod;
+    char *stroutVSR = NULL, *stroutVPR = NULL;
+    FILE *FPMod, *FPModDeb, *FPLog, *FPoutVSMod, *FPoutVPMod, *FPoutObj, *FPBestMod, *FPoutVSR, *FPoutVPR;
     MOD  mod, deb, upper, lowwer, InvMod;
     int i, j;
     int nhead = 0;
@@ -84,6 +90,14 @@ int main(int argc, char *argv[])
                 case 'P':
                     stroutVPMod = &(argv[i][2]);
                     foutVPMod   = 1;
+                    break;
+                case 'p':
+                    stroutVPR = &(argv[i][2]);
+                    foutVPR   = 1;
+                    break;
+                case 's':
+                    stroutVSR = &(argv[i][2]);
+                    foutVSR   = 1;
                     break;
                 case 'J':
                     stroutObj = &(argv[i][2]);
@@ -144,6 +158,16 @@ int main(int argc, char *argv[])
     if( (FPoutObj = fopen(stroutObj, "w")) == NULL )
     {
         perrmsg(stroutObj, ERR_OPEN_FILE);
+        exit(1);
+    }
+    if( (FPoutVSR = fopen(stroutVSR, "w")) == NULL )
+    {
+        perrmsg(stroutVSR, ERR_OPEN_FILE);
+        exit(1);
+    }
+    if( (FPoutVPR = fopen(stroutVPR, "w")) == NULL )
+    {
+        perrmsg(stroutVPR, ERR_OPEN_FILE);
         exit(1);
     }
 
@@ -232,6 +256,28 @@ int main(int argc, char *argv[])
         fprintf(FPoutVSMod, "%f %f %f\n", vs, (mod.la)[j].depthTop, -100.0f);
         fprintf(FPoutVSMod, "%f %f %f\n", vs, (mod.la)[j].depthBot, -100.0f);
     }
+
+    //output lowwer and upper model
+    for(j = 0; j <= mod.nl; ++j)
+    {
+        vs = (lowwer.la)[j].vp / (lowwer.la)[j].k;
+        fprintf(FPoutVPR, "%f %f\n", (lowwer.la)[j].vp, (lowwer.la)[j].depthTop);
+        fprintf(FPoutVPR, "%f %f\n", (lowwer.la)[j].vp, (lowwer.la)[j].depthBot);
+
+        fprintf(FPoutVSR, "%f %f\n", vs, (lowwer.la)[j].depthTop);
+        fprintf(FPoutVSR, "%f %f\n", vs, (lowwer.la)[j].depthBot);
+    }
+
+    for(j = mod.nl; j >= 0; --j)
+    {
+        vs = (upper.la)[j].vp / (upper.la)[j].k;
+        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthTop);
+        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthBot);
+
+        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthTop);
+        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthBot);
+    }
+
     // The late model is not the best model. Read the best model from the file 2015/09/17
     //
     // For the last model 2015/09/01
@@ -259,6 +305,8 @@ int main(int argc, char *argv[])
     fclose(FPoutVSMod);
     fclose(FPoutVPMod);
     fclose(FPoutObj);
+    fclose(FPoutVPR);
+    fclose(FPoutVSR);
     return 0;
 }
 
