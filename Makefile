@@ -77,7 +77,7 @@ clusterRPBaz: clusterRPBaz.c liberrmsg.h
 	${CC} -o clusterRPBaz ${SRC}/clusterRPBaz.c -lerrmsg ${CFLAGS}
 
 NRootStack: NRootStack.c sac.h libnumrec.h
-	${CC} -o NRootStack ${SRC}/NRootStack.c  -lnumrec -lsacio ${CFLAGS}
+	${CC} -o NRootStack ${SRC}/NRootStack.c  -lnumrec -lerrmsg -lsacio ${CFLAGS}
 
 pl_derfmod: pl_derfmod.c liberrmsg.h
 	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c -lerrmsg ${CFLAGS}

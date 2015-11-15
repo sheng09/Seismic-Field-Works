@@ -1,3 +1,5 @@
+#include "liberrmsg.h"
+
 #ifndef __NUMRECIP__
 #define __NUMRECIP__
 
@@ -35,8 +37,8 @@ float integf(float *trace, int pre, int suf, float dx);
 float fdmaxf(float *trace, int len, int *index);
 //Correlation for two vector
 float corf(float *trace1, float *trace2, int len);
-
-
+//Correlation for two vector interval [b,e]
+float corf_2(float *trace1, float *trace2, int len, int b, int e);
 #endif
 
 #ifndef POW

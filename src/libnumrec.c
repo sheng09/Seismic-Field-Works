@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "libnumrec.h"
+#include "liberrmsg.h"
 #include <string.h>
 float rnd_uni(long *idum)
 /**C*F****************************************************************
@@ -187,5 +188,29 @@ float corf(float *trace1, float *trace2, int len)
         ac2 += trace2[i] * trace2[i];
     }
     ak *= sqrtf(1.0f/ ac1 / ac2);
+    return ak;
+}
+
+//Correlation for two vector interval [b,e]
+float corf_2(float *trace1, float *trace2, int len, int b, int e)
+{
+    if(b < 0 || e < 0 || b > len || e > len || e < b)
+    {
+        perrmsg( corf_2, WARN_OUT_RANGE);
+        exit(1);
+    }
+    int i;
+    float ak = 0.0f, ac1 = 0.0f, ac2 = 0.0f ;
+    for(i = b; i <= e; ++i)
+    {
+        ak  += trace1[i] * trace2[i];
+        ac1 += trace1[i] * trace1[i];
+        ac2 += trace2[i] * trace2[i];
+    }
+    //Add by Wangsheng 2015/11/08
+    if(ac1 > 1.0e-8 && ac2 > 1.0e-8)
+        ak *= sqrtf(1.0f/ ac1 / ac2);
+    else
+        ak = 0.0f;
     return ak;
 }

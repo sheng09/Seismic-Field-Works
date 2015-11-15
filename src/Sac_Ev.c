@@ -422,6 +422,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
                 fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //Add by wangsheng 2015/11/08
+                fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");
@@ -464,6 +466,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
                 fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //Add by wangsheng 2015/11/08
+                fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");
