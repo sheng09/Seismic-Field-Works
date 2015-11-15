@@ -24,19 +24,23 @@ typedef  struct
 }MOD;
 
 char HMSG[]="\
-Usage: %s -MKMI.1.mod -DKMI.1.mod.deb -LKMI.1.log -BKMI.1.best -OKMI.1.xy -JKMI.1.obj -E<n heads>\n\
+Usage: %s -MKMI.1.mod -DKMI.1.mod.deb -LKMI.1.log -BKMI.1.best -E<n heads>\\\n\
+          -PKMI.vp.m -SKMI.vs.m -JKMI.1.obj -OKMI.1.xy \\\n\
+          -pKMI.vpr  -sKMI.vpr\n\
 \n\
 Input files arguments:\n\
 -M initial model for inversion\n\
 -D deviation model for inversion\n\
 -L log file of DERF-inversion\n\
 -B best model\n\
+-E number of heads to jump\n\
 \n\
 Output files arguments\n\
 -S output  vs-model file for GMT plot\n\
 -P output  vp-model file for GMT plot\n\
+-s output  vs-model rangle for GMT plot\n\
+-p ouput   vp-model rangle for GMT plot\n\
 -J output object value file for GMT plot\n\
--E number of heads to jump\n\
 ";
 
 int readMod( FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lowwer);
@@ -46,8 +50,10 @@ int readLog(FILE *FPLog, MOD *mod, int nl);
 int main(int argc, char *argv[])
 {
     int   fMod = 0, fDeb = 0, fLog = 0, foutVSMod = 0, foutVPMod = 0,foutObj = 0, fBestMod = 0, fnhead = 0;
+    int   foutVSR=0, foutVPR=0;
     char *strMod = NULL, *strModDeb = NULL, *strLog = NULL, *stroutVSMod = NULL, *stroutVPMod =NULL, *stroutObj = NULL, *strBestMod = NULL;
-    FILE *FPMod, *FPModDeb, *FPLog, *FPoutVSMod, *FPoutVPMod, *FPoutObj, *FPBestMod;
+    char *stroutVSR = NULL, *stroutVPR = NULL;
+    FILE *FPMod, *FPModDeb, *FPLog, *FPoutVSMod, *FPoutVPMod, *FPoutObj, *FPBestMod, *FPoutVSR, *FPoutVPR;
     MOD  mod, deb, upper, lowwer, InvMod;
     int i, j;
     int nhead = 0;
@@ -85,6 +91,14 @@ int main(int argc, char *argv[])
                     stroutVPMod = &(argv[i][2]);
                     foutVPMod   = 1;
                     break;
+                case 'p':
+                    stroutVPR = &(argv[i][2]);
+                    foutVPR   = 1;
+                    break;
+                case 's':
+                    stroutVSR = &(argv[i][2]);
+                    foutVSR   = 1;
+                    break;
                 case 'J':
                     stroutObj = &(argv[i][2]);
                     foutObj = 1;
@@ -104,7 +118,9 @@ int main(int argc, char *argv[])
             }
         }
     }
-    if(fMod == 0 || fDeb == 0 || fLog == 0 || fBestMod == 0 || foutVSMod == 0 || foutVPMod == 0 || foutObj == 0 || fnhead == 0)
+    if( fMod == 0 || fDeb == 0 || fLog == 0 || fBestMod == 0 ||
+        foutVSMod == 0 || foutVPMod == 0 || foutObj == 0 || fnhead == 0 ||
+        foutVPR   == 0 || foutVSR == 0)
     {
         perrmsg("",ERR_MORE_ARGS);
         fprintf(stderr, HMSG,argv[0]);
@@ -146,6 +162,16 @@ int main(int argc, char *argv[])
         perrmsg(stroutObj, ERR_OPEN_FILE);
         exit(1);
     }
+    if( (FPoutVSR = fopen(stroutVSR, "w")) == NULL )
+    {
+        perrmsg(stroutVSR, ERR_OPEN_FILE);
+        exit(1);
+    }
+    if( (FPoutVPR = fopen(stroutVPR, "w")) == NULL )
+    {
+        perrmsg(stroutVPR, ERR_OPEN_FILE);
+        exit(1);
+    }
 
 
     readMod(FPMod, FPModDeb, &mod, &deb, &upper, &lowwer);
@@ -169,7 +195,7 @@ int main(int argc, char *argv[])
             ;
         ++i )
     {
-        if(i % 5 == 0)
+        if(i % 2 == 0)
         {
             fprintf(FPoutVSMod, "> -Z%f\n",InvMod.obj/ObjSTD);
             fprintf(FPoutVPMod, "> -Z%f\n",InvMod.obj/ObjSTD);
@@ -232,6 +258,28 @@ int main(int argc, char *argv[])
         fprintf(FPoutVSMod, "%f %f %f\n", vs, (mod.la)[j].depthTop, -100.0f);
         fprintf(FPoutVSMod, "%f %f %f\n", vs, (mod.la)[j].depthBot, -100.0f);
     }
+
+    //output lowwer and upper model
+    for(j = 0; j <= mod.nl; ++j)
+    {
+        vs = (lowwer.la)[j].vp / (lowwer.la)[j].k;
+        fprintf(FPoutVPR, "%f %f\n", (lowwer.la)[j].vp, (lowwer.la)[j].depthTop);
+        fprintf(FPoutVPR, "%f %f\n", (lowwer.la)[j].vp, (lowwer.la)[j].depthBot);
+
+        fprintf(FPoutVSR, "%f %f\n", vs, (lowwer.la)[j].depthTop);
+        fprintf(FPoutVSR, "%f %f\n", vs, (lowwer.la)[j].depthBot);
+    }
+
+    for(j = mod.nl; j >= 0; --j)
+    {
+        vs = (upper.la)[j].vp / (upper.la)[j].k;
+        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthBot);
+        fprintf(FPoutVPR, "%f %f\n", (upper.la)[j].vp, (upper.la)[j].depthTop);
+
+        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthBot);
+        fprintf(FPoutVSR, "%f %f\n", vs, (upper.la)[j].depthTop);
+    }
+
     // The late model is not the best model. Read the best model from the file 2015/09/17
     //
     // For the last model 2015/09/01
@@ -259,6 +307,8 @@ int main(int argc, char *argv[])
     fclose(FPoutVSMod);
     fclose(FPoutVPMod);
     fclose(FPoutObj);
+    fclose(FPoutVPR);
+    fclose(FPoutVSR);
     return 0;
 }
 
@@ -267,6 +317,8 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
     char line[1024];
     int i;
     float depth = 0.0;
+    float depthL = 0.0;
+    float depthU = 0.0;
     //Read MOD
     if( NULL == fgets(line, 1024, fpMod)) exit(1);
     if( NULL == fgets(line, 1024, fpMod)) exit(1);
@@ -332,12 +384,15 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
         (upper->la)[i].vp       = (mod->la)[i].vp    + (deb->la)[i].vp    ;
         (upper->la)[i].B        = (mod->la)[i].B     + (deb->la)[i].B     ;
         (upper->la)[i].C        = (mod->la)[i].C     + (deb->la)[i].C     ;
-        (upper->la)[i].k        = (mod->la)[i].k     + (deb->la)[i].k     ;
+        (upper->la)[i].k        = (mod->la)[i].k     - (deb->la)[i].k     ;
         (upper->la)[i].E        = (mod->la)[i].E     + (deb->la)[i].E     ;
         (upper->la)[i].rho      = (mod->la)[i].rho   + (deb->la)[i].rho   ;
         (upper->la)[i].NSL      = (mod->la)[i].NSL   + (deb->la)[i].NSL   ;
-        (upper->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
-        (upper->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        //(upper->la)[i].depthTop = (mod->la)[i].depthTop - (deb->la)[i].h     ;
+        //(upper->la)[i].depthBot = (mod->la)[i].depthBot - (deb->la)[i].h     ;
+        (upper->la)[i].depthTop = depthU;
+        depthU                  = (mod->la)[i].h - (deb->la)[i].h;
+        (upper->la)[i].depthBot = depthU;
 
         (lowwer->la)[i].theta   = (mod->la)[i].theta - (deb->la)[i].theta ;
         (lowwer->la)[i].fai     = (mod->la)[i].fai   - (deb->la)[i].fai   ;
@@ -345,12 +400,17 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
         (lowwer->la)[i].vp      = (mod->la)[i].vp    - (deb->la)[i].vp    ;
         (lowwer->la)[i].B       = (mod->la)[i].B     - (deb->la)[i].B     ;
         (lowwer->la)[i].C       = (mod->la)[i].C     - (deb->la)[i].C     ;
-        (lowwer->la)[i].k       = (mod->la)[i].k     - (deb->la)[i].k     ;
+        (lowwer->la)[i].k       = (mod->la)[i].k     + (deb->la)[i].k     ;
         (lowwer->la)[i].E       = (mod->la)[i].E     - (deb->la)[i].E     ;
         (lowwer->la)[i].rho     = (mod->la)[i].rho   - (deb->la)[i].rho   ;
         (lowwer->la)[i].NSL     = (mod->la)[i].NSL   - (deb->la)[i].NSL   ;
-        (lowwer->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
-        (lowwer->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        //(lowwer->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
+        //(lowwer->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+        (lowwer->la)[i].depthTop = depthL;
+        depthL                   = (mod->la)[i].h + (deb->la)[i].h;
+        (lowwer->la)[i].depthBot = depthL;
+
+        //printf("%d %f %f %f %f %f\n",i, (lowwer->la)[i].depthTop, (lowwer->la)[i].depthBot,(mod->la)[i].depthTop, (mod->la)[i].depthBot, (deb->la)[i].h);
     }
     return 0;
 }

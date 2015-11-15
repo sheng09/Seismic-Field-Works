@@ -3,7 +3,7 @@
 #include <string.h>
 #include "libtime.h"
 #include "libsph.h"
-#include "libtaup.h"
+#include "libctau.h"
 #include "liberrmsg.h"
 
 #include "Sac_Ev.h"
@@ -180,7 +180,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
-                taup("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                ctau("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
                 trvt = t[0];
                 p    = rp[0];
 
@@ -422,6 +422,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
                 fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //Add by wangsheng 2015/11/08
+                fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");
@@ -464,6 +466,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
                 fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //Add by wangsheng 2015/11/08
+                fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
                 fprintf(fp, "w over \n" );
                 fprintf(fp, "cut off \n");

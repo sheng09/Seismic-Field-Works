@@ -1,7 +1,7 @@
 CC  = gcc
 SRC = ./src
 #CFLAGS = -lm -I./include -L./lib -L. -Ofast -Wall
-CFLAGS = -ltaup -L/opt/ttimes -L./lib -L. -I/opt/ttimes -I./include -lgfortran -lm -Ofast -Wall
+CFLAGS = -lctau -L/opt/ttimes/lib -L./lib -L. -I/opt/ttimes/inc -I./include -lgfortran -lm -Ofast -Wall
 BIN = ./bin
 LIB = ./lib
 INC = ./include
@@ -77,7 +77,7 @@ clusterRPBaz: clusterRPBaz.c liberrmsg.h
 	${CC} -o clusterRPBaz ${SRC}/clusterRPBaz.c -lerrmsg ${CFLAGS}
 
 NRootStack: NRootStack.c sac.h libnumrec.h
-	${CC} -o NRootStack ${SRC}/NRootStack.c  -lnumrec -lsacio ${CFLAGS}
+	${CC} -o NRootStack ${SRC}/NRootStack.c  -lnumrec -lerrmsg -lsacio ${CFLAGS}
 
 pl_derfmod: pl_derfmod.c liberrmsg.h
 	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c -lerrmsg ${CFLAGS}
