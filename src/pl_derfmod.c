@@ -376,7 +376,7 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
         fprintf(stderr, "Err:\n" );
         exit(1);
     }
-    for(i = 0; i <= mod->nl; ++i)
+    for(i = 0; i < mod->nl; ++i)
     {
         (upper->la)[i].theta    = (mod->la)[i].theta + (deb->la)[i].theta ;
         (upper->la)[i].fai      = (mod->la)[i].fai   + (deb->la)[i].fai   ;
@@ -412,6 +412,39 @@ int readMod(FILE *fpMod, FILE *fpModDeb, MOD *mod, MOD *deb, MOD *upper, MOD *lo
 
         //printf("%d %f %f %f %f %f\n",i, (lowwer->la)[i].depthTop, (lowwer->la)[i].depthBot,(mod->la)[i].depthTop, (mod->la)[i].depthBot, (deb->la)[i].h);
     }
+
+    i = mod->nl;
+    (upper->la)[i].theta    = (mod->la)[i].theta + (deb->la)[i].theta ;
+    (upper->la)[i].fai      = (mod->la)[i].fai   + (deb->la)[i].fai   ;
+    (upper->la)[i].h        = (mod->la)[i].h     + (deb->la)[i].h     ;
+    (upper->la)[i].vp       = (mod->la)[i].vp    + (deb->la)[i].vp    ;
+    (upper->la)[i].B        = (mod->la)[i].B     + (deb->la)[i].B     ;
+    (upper->la)[i].C        = (mod->la)[i].C     + (deb->la)[i].C     ;
+    (upper->la)[i].k        = (mod->la)[i].k     - (deb->la)[i].k     ;
+    (upper->la)[i].E        = (mod->la)[i].E     + (deb->la)[i].E     ;
+    (upper->la)[i].rho      = (mod->la)[i].rho   + (deb->la)[i].rho   ;
+    (upper->la)[i].NSL      = (mod->la)[i].NSL   + (deb->la)[i].NSL   ;
+    //(upper->la)[i].depthTop = (mod->la)[i].depthTop - (deb->la)[i].h     ;
+    //(upper->la)[i].depthBot = (mod->la)[i].depthBot - (deb->la)[i].h     ;
+    (upper->la)[i].depthTop = depthU;
+    depthU                  = (mod->la)[i].h - (deb->la)[i].h;
+    (upper->la)[i].depthBot = depthU;
+
+    (lowwer->la)[i].theta   = (mod->la)[i].theta - (deb->la)[i].theta ;
+    (lowwer->la)[i].fai     = (mod->la)[i].fai   - (deb->la)[i].fai   ;
+    (lowwer->la)[i].h       = (mod->la)[i].h     - (deb->la)[i].h     ;
+    (lowwer->la)[i].vp      = (mod->la)[i].vp    - (deb->la)[i].vp    ;
+    (lowwer->la)[i].B       = (mod->la)[i].B     - (deb->la)[i].B     ;
+    (lowwer->la)[i].C       = (mod->la)[i].C     - (deb->la)[i].C     ;
+    (lowwer->la)[i].k       = (mod->la)[i].k     + (deb->la)[i].k     ;
+    (lowwer->la)[i].E       = (mod->la)[i].E     - (deb->la)[i].E     ;
+    (lowwer->la)[i].rho     = (mod->la)[i].rho   - (deb->la)[i].rho   ;
+    (lowwer->la)[i].NSL     = (mod->la)[i].NSL   - (deb->la)[i].NSL   ;
+    //(lowwer->la)[i].depthTop = (mod->la)[i].depthTop + (deb->la)[i].h     ;
+    //(lowwer->la)[i].depthBot = (mod->la)[i].depthBot + (deb->la)[i].h     ;
+    (lowwer->la)[i].depthTop = depthL;
+    depthL                   = (mod->la)[i].h + (deb->la)[i].h;
+    (lowwer->la)[i].depthBot = depthL;
     return 0;
 }
 int readMod2(FILE *fpMod,                 MOD *mod)
