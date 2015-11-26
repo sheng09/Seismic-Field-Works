@@ -196,7 +196,7 @@ float corf_2(float *trace1, float *trace2, int len, int b, int e)
 {
     if(b < 0 || e < 0 || b > len || e > len || e < b)
     {
-        perrmsg( corf_2, WARN_OUT_RANGE);
+        perrmsg( "corf_2", WARN_OUT_RANGE);
         exit(1);
     }
     int i;
