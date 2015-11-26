@@ -52,7 +52,7 @@ int main(int argc, char  *argv[])
     char  ec;
     int   _Index;
 
-    char day[11], dayt[12], MagType[3];
+    char day[11], dayt[13], MagType[3];
     double depth;
     static struct  option _Option[]=
     {
@@ -160,6 +160,8 @@ int main(int argc, char  *argv[])
     	memset(Line,0,4096);
     	if( fgets(Line,4096,fp) == NULL) break;
     }
+
+    i = 0;
     while(1)
     {
     	memset(Line,0,4096);
@@ -192,12 +194,13 @@ int main(int argc, char  *argv[])
                 day[7] = '/';
 
                 strncpy(dayt, &(Line[31]), 11 );
-                dayt[11] = 0;
+                dayt[12] = 0;
                 if(dayt[8] == ' ')
                 {
                     dayt[8]  = '.';
                     dayt[9]  = '0';
                     dayt[10] = '0';
+                    dayt[11] = '0';
                 }
 
                 strncpy(MagType, &(Line[85]), 2 );
@@ -205,8 +208,9 @@ int main(int argc, char  *argv[])
                 if(MagType[1] == ' ')
                     MagType[1] = 'b';
 
-                printf("%s %s %6.2lf %7.2lf %8.2lf %3.1lf %s\n", day, dayt, lat, lon, depth, mag, MagType );
+                //printf("%s %s %6.2lf %7.2lf %8.2lf %3.1lf %s\n", day, dayt, lat, lon, depth, mag, MagType );
 
+                printf("%04f WS %10.5f %10.5f -12345 %10.5f %s %s %2s %4.2f\n", i++, lat, lon, depth, day, dayt, MagType, mag );
                 //Line[67] = 0;
                 //printf("%s\n", Line);
                 //printf("%9.4lf %9.4lf %9.4lf %9.4lf %9.4lf\n",lon0,lat0,lon,lat,dis );
