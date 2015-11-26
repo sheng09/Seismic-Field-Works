@@ -398,23 +398,24 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                const float pre, const float suf,
                FILE *fp)
 {
+    (ev->evnm)[15] = 0;
         int i;
         if(nlst == 1L)
         {
                 //For BHZ
                 fprintf(fp, "r %s.BHZ\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHZ \n",outfile);
                 //For BHN
                 fprintf(fp, "r %s.BHN\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHN \n",outfile);
                 //For BHE
                 fprintf(fp, "r %s.BHE\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHE \n",outfile);
 
                 //Cut
@@ -438,8 +439,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHZ ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHZ \n",outfile);
                 //For BHN
                 fprintf(fp, "r ");
@@ -448,8 +449,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHN ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHN \n",outfile);
                 //For BHE
                 fprintf(fp, "r ");
@@ -458,8 +459,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHE ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
                 fprintf(fp, "w %s.BHE \n",outfile);
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
