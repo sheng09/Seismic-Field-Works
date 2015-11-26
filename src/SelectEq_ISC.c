@@ -21,16 +21,18 @@ Usage: SelectEq  -I <infile name>\n\
                  -C <longitude/latitude>\n\
                  -R <radius floor/radius ceil>  [0 < radius < 180]\n\
                  -N <number of headlines>\n\
-                 -M <min magnitude>\n\
+                 -M <min magnitude/max magnitude>\n\
 \n\
 Description:\n\
           The longitude and latitude is in DEGREE format.\n\
-              Longitude: [0,360], Latitude: [-90,90].\n\
+              Latitude: [-90,90] Deg.\n\
           The radius is in DEGREE format.\n\
-              Radius: (0,PI)\n\
+              Radius: (0,90)Deg\n\
+          The output format is :\n\
+          Count Name La Lo el dp KDATE KTIME magtype mag\n\
 Example:\n\
 \n\
-          SelectEq -I isc.dat -C 110.0/35.4 -R 30.0/120.0 -N 20 -M 7.0 \n\
+          SelectEq -I isc.dat -C 110.0/35.4 -R 30.0/120.0 -N 20 -M 6.0/7.0 \n\
 \n\
 Author: Wangsheng, IGGCAS, PRC.\n\
 Email:  wangsheng.cas@gmail.com\
@@ -113,7 +115,7 @@ int main(int argc, char  *argv[])
     double f0,  t0;
     double r0,r1;
     int    n;
-    double mag0;
+    double magMin, magMax;
     if((fp = fopen(str_file,"r"))== NULL)
     {
         perrmsg(str_file, ERR_OPEN_FILE);
@@ -141,8 +143,8 @@ int main(int argc, char  *argv[])
     	fprintf(stderr, "Err: invalid number of headlines! '%s'\n",str_n );
     	exit(0);
     }
-    sscanf(str_mag0,"%lf",&mag0);
-    if(mag0 < 0.0)
+    sscanf(str_mag0,"%lf/%lf",&magMin, &magMax);
+    if(magMin < 0.0 || magMax < 0.0 || magMin > magMax)
     {
         fprintf(stderr, "Err: invalid magnitude setting! '%s'\n",str_mag0 );
         exit(0);
@@ -169,7 +171,7 @@ int main(int argc, char  *argv[])
     	//13325010,ISC      ,2008-01-01,01:01:17.09, 27.4375, 139.9896,443.3,
     	sscanf(&(Line[43]),"%lf,%lf,%lf",&lat,&lon,&depth);
         sscanf(&(Line[92]),"%lf",&mag);
-        if(mag >= mag0)
+        if(mag >= magMin && mag <= magMax)
         {
             f = LON2F(lon);
             t = LAT2T(lat);
@@ -210,8 +212,8 @@ int main(int argc, char  *argv[])
 
                 //printf("%s %s %6.2lf %7.2lf %8.2lf %3.1lf %s\n", day, dayt, lat, lon, depth, mag, MagType );
 
-                printf("%04f WS %10.5f %10.5f -12345 %10.5f %s %s %2s %4.2f\n", i++, lat, lon, depth, day, dayt, MagType, mag );
-                //Line[67] = 0;
+                printf("%04d WS %10.5f %10.5f -12345 %10.5f %s %s %3s %4.2f\n", i++, lat, lon, depth, day, dayt, MagType, mag );
+                //Line[67] = 0z
                 //printf("%s\n", Line);
                 //printf("%9.4lf %9.4lf %9.4lf %9.4lf %9.4lf\n",lon0,lat0,lon,lat,dis );
                 //printf("%9.4lf %9.4lf %9.4lf %9.4lf %9.4lf\n",f0,t0,f,t,dis );
