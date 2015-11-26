@@ -8,14 +8,22 @@
 #  Add getopts(-D -P -V) functions.
 #  Wangsheng
 #  2015-05-08
-HMSG="Usage: SH_Segy2Sac.sh.sh -D Directory [-V]"
+HMSG="Usage: SH_Segy2Sac.sh.sh -D Directory -O Directory [-V]\n\
+-D Directory  The directory that contains station segy directories, which is copyed from the station.\n\
+-O Directory  Ouput directory for SAC files. Default is [./SAC]\n\
+-V            Verbose
+"
+SAC="./SAC"
 VERBOSE=" > /dev/null"
-while  getopts  "D:P:V"  arg #选项后面的冒号表示该选项需要参数
+while  getopts  "D:O:V"  arg #选项后面的冒号表示该选项需要参数
 do
          case  $arg  in
              D)
                 DIR=$OPTARG
                 #echo \# Directory: $DIR
+                ;;
+             O)
+                SAC=$OPTARG
                 ;;
              V)
 				VERBOSE=""
@@ -28,18 +36,17 @@ do
 done
 
 if [[ -z $DIR ]]; then
-	echo $HMSG
+	echo -e $HMSG
 	exit 1
 fi
-ln -s $DIR TMP
+#ln -s $DIR TMP
 
-segy2sac TMP/R*/*
+mkdir ${SAC} 2>&- || rm ${SAC}/* -rf 2>&-
 
-if [[ -a SAC ]]; then
-	rm SAC/*
-else
-	mkdir SAC
-fi
-
-mv TMP/R*/*.sac SAC
-rm TMP -f
+ls $DIR > tmp.dir
+while read STA
+do
+    mkdir ${SAC}/${STA}
+    segy2sac ${DIR}/${STA}/* -d ${SAC}/${STA}
+done < tmp.dir
+rm tmp.dir

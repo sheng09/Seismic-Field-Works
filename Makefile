@@ -8,7 +8,7 @@ INC = ./include
 
 OBJ     = Sac_Ev.o Kmean.o
 OBJLIB  = liberrmsg.a libtime.a libsph.a  libnumrec.a libsacio.a
-OBJEXEC = GMTime DTime GCDis cut4Ev RpKmean clusterRPBaz NRootStack pl_derfmod spDis
+OBJEXEC = GMTime DTime GCDis cut4Ev RpKmean clusterRPBaz NRootStack pl_derfmod spDis SelectEq_ISC
 VPATH = ${SRC}:${INC}:${LIB}
 
 .PHONY:all
@@ -81,6 +81,9 @@ NRootStack: NRootStack.c sac.h libnumrec.h
 
 pl_derfmod: pl_derfmod.c liberrmsg.h
 	${CC} -o pl_derfmod ${SRC}/pl_derfmod.c -lerrmsg ${CFLAGS}
+
+SelectEq_ISC: SelectEq_ISC.c liberrmsg.h
+	${CC} -o SelectEq_ISC ${SRC}/SelectEq_ISC.c -lerrmsg  -lm  ${CFLAGS}
 
 .PHONY:clean
 
