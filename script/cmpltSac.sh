@@ -75,6 +75,9 @@ cd ${DIR}
 ls > sta.tmp
 while read STA
 do
+    if [[ ! -d ${STA} ]]; then
+        continue
+    fi
     echo Processing ${STA}
     cd ${STA}
     #                                                                                            YYYY DDD   MM   HH   SS  FFFF    CCC

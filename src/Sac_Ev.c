@@ -169,7 +169,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
 
         //sacData **lst = (sacData **) calloc(MERGEMAX, sizeof(*sacData));
         int   found;
-        float delta,trvt, p, dtES;
+        float delta,trvt, p, dtES, dtES_head;
         float *t, *rp, *dtdh, *dddp, *mn, *ts, *toa;
         int   nph;
         char  (*phnm)[9];
@@ -186,22 +186,25 @@ int fdFile(evData  *evdat,  const long _evnum ,
 
                 //printf("%f %f %f %f :", evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 //printf("%f %f %f\n", delta,  evdat[j].evdp, trvt );
-                found = 0;
-                nlst = 0L;
+                found = 0; // 0: Not found 1: Found
+                nlst = 0L; // Number of sac files intersect with the time interval
+
+                // Find the sac file that totally cover the time interval I want
                 for( i = 0; i < _sacnum; ++i )
                 {
                         dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
                         if( (dtES + sacdat[i].b) <= (trvt + pre) &&
                             (dtES + sacdat[i].e) >= (trvt + suf)    )
                             //                              B  SAC FILE     E
-                            // ----------------O------------|********A******|---------
+                            // ----------------O------------|********A******|---------   original trace
                             //                 |<--     trvt      -->|
-                            // ---------------------------------|********|------------
+                            // ---------------------------------|********|------------   trace I want
                             //                              trvt+pre    trvt+suf
                         {
                                 lst[nlst] = &( sacdat[i] );
                                 nlst  = 1L;
                                 found = 1;
+                                dtES_head = dtES;
                                 //Add by wangsheng 2015/09/18
                                 //For debug
                                 #ifdef DEBUG
@@ -237,6 +240,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                 break;
                         }*/
                 }
+
+                // Find all the sac files that intersect with the time interval I want
                 if( found != 1)
                 {
                         ISHead = 0;
@@ -291,6 +296,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                             ((trvt + suf) >= (dtES + sacdat[i].e))
                                    )
                                 {
+                                        dtES_head = dtES;
                                         ISHead = 1;
                                         lst[nlst] = &( sacdat[i] );
                                         ++nlst;
@@ -325,7 +331,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                         ++nlst;
                                 }
                         }
-                        if( ISHead != 1 || ISTail != 1)
+                        if( ISHead != 1 || ISTail != 1) // The head and tail of the trace I want must be covered by some sacfiles
                                 continue;
                         //Add by wangsheng 2015/09/18
                         //For debug
@@ -351,9 +357,10 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                                        ev->evTime.hour, ev->evTime.min, ev->evTime.sec, ev->evTime.msec);
                         #endif
                         /////////////////
-                        geneSacCmd(Line, trvt - dtES, dtES, p,
+                        geneSacCmd(Line, trvt - dtES_head, dtES_head, p,
                                    pre, suf,
                                    fp );
+                        //printf("%f %f %f\n", trvt , dtES_head, trvt - dtES_head );
                 }
                 /*{
                         //For BHZ
