@@ -404,25 +404,27 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
         {
                 //For BHZ
                 fprintf(fp, "r %s.BHZ\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHZ \n",outfile);
                 //For BHN
                 fprintf(fp, "r %s.BHN\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHN \n",outfile);
                 //For BHE
                 fprintf(fp, "r %s.BHE\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHE \n",outfile);
 
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
+                //fprintf(fp, "%s\n", );
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
-                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %15s mag %f\n", ev->evnm, ev->mag);
                 //Add by wangsheng 2015/11/08
                 fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
@@ -439,8 +441,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHZ ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHZ \n",outfile);
                 //For BHN
                 fprintf(fp, "r ");
@@ -449,8 +451,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHN ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHN \n",outfile);
                 //For BHE
                 fprintf(fp, "r ");
@@ -459,14 +461,15 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHE ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f kevnm %15s\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0, ev->evnm);
+                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
                 fprintf(fp, "w %s.BHE \n",outfile);
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
-                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %15s mag %f\n", ev->evnm, ev->mag);
                 //Add by wangsheng 2015/11/08
                 fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
