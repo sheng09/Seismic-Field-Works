@@ -54,7 +54,7 @@ int main(int argc, char  *argv[])
     char  ec;
     int   _Index;
 
-    char day[11], dayt[13], MagType[3], author[11];
+    char day[11], dayt[13], MagType[3], author[10];
     double depth;
     static struct  option _Option[]=
     {
@@ -210,11 +210,11 @@ int main(int argc, char  *argv[])
                 if(MagType[1] == ' ')
                     MagType[1] = 'b';
 
-                strncpy(author, &(Line[10]), 10);
-                author[10] = 0;
+                strncpy(author, &(Line[10]), 9);
+                author[9] = 0;
                 //printf("%s %s %6.2lf %7.2lf %8.2lf %3.1lf %s\n", day, dayt, lat, lon, depth, mag, MagType );
 
-                printf("%04d %11s %10.5f %10.5f -12345 %10.5f %s %s %3s %4.2f\n", i++, author ,lat, lon, depth, day, dayt, MagType, mag );
+                printf("%04d %10s %10.5f %10.5f -12345 %10.5f %s %s %3s %4.2f\n", i++, author ,lat, lon, depth, day, dayt, MagType, mag );
                 //Line[67] = 0z
                 //printf("%s\n", Line);
                 //printf("%9.4lf %9.4lf %9.4lf %9.4lf %9.4lf\n",lon0,lat0,lon,lat,dis );
