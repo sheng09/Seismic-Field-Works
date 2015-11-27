@@ -101,7 +101,7 @@ evData* rdEvLst(char *filename, long *n)
                         break;
                 ++nEv;
         }
-        if(NULL == ( evdat = (evData *) calloc( nEv, sizeof(sacData) ) ) )
+        if(NULL == ( evdat = (evData *) calloc( nEv, sizeof(evData) ) ) )
         {
                 perrmsg("rdEvLst()",ERR_ALC_MEM);
                 exit(1);
@@ -122,6 +122,7 @@ evData* rdEvLst(char *filename, long *n)
                         &(evdat[i].evla), &(evdat[i].evlo), &(evdat[i].evel), &(evdat[i].evdp), 
                         evdat[i].evTime.KDATE, evdat[i].evTime.KTIME,
                         evdat[i].imagtype, &(evdat[i].mag) );
+                evdat[i].evnm[15] = 0;
                 rtime( &(evdat[i].evTime) );
         }
         fclose(fp);
@@ -163,13 +164,13 @@ int fdFile(evData  *evdat,  const long _evnum ,
             FILE *fp)
 {
 
-        int i,j;
+        int i,j,k;
         //sacData *sacdat = _sacdat;
         //evData  *evdat  = _evdat;
 
         //sacData **lst = (sacData **) calloc(MERGEMAX, sizeof(*sacData));
         int   found;
-        float delta,trvt, p, dtES, dtES_head;
+        float delta,trvt, p, dtES, dtES_head = 0.0f;
         float *t, *rp, *dtdh, *dddp, *mn, *ts, *toa;
         int   nph;
         char  (*phnm)[9];
@@ -180,12 +181,16 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
-                ctau("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                ctau("P   ", (evdat[j]).evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                //for(k = 0; k < 2; ++k)
+                //    printf("%s %f  ", phnm[k] ,t[k] );
+                //ctau("P   ", 0.0f, 60.115402f,       &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                    //printf("||  ");
                 trvt = t[0];
                 p    = rp[0];
 
                 //printf("%f %f %f %f :", evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
-                //printf("%f %f %f\n", delta,  evdat[j].evdp, trvt );
+                //printf("%04d %f %f %f\n", j, delta,  evdat[j].evdp, trvt );
                 found = 0; // 0: Not found 1: Found
                 nlst = 0L; // Number of sac files intersect with the time interval
 
