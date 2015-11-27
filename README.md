@@ -27,3 +27,6 @@ Clustering is common in seismic processing according to ray parameter or (back) 
 <!Determine an RF is good or bad according to obvious criterias, including eing postive around ZERO", "P phase must be dominant", and so on.!>
 <!##2.2 pickRf_WV!>
 <!Given a number of RFs and a reference RF, determine which is good or bad according to their similarity to the reference RF. The reference RF comes from input or just the stacking result of all the RFs.!>
+
+
+
