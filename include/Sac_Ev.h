@@ -15,7 +15,7 @@ typedef struct
 typedef struct
 {
         long  evcount;
-        char  evnm[8];
+        char  evnm[16];
         float evla, evlo, evdp, evel, mag;
         char  imagtype[4];
         Time  evTime;

@@ -101,7 +101,7 @@ evData* rdEvLst(char *filename, long *n)
                         break;
                 ++nEv;
         }
-        if(NULL == ( evdat = (evData *) calloc( nEv, sizeof(sacData) ) ) )
+        if(NULL == ( evdat = (evData *) calloc( nEv, sizeof(evData) ) ) )
         {
                 perrmsg("rdEvLst()",ERR_ALC_MEM);
                 exit(1);
@@ -122,6 +122,7 @@ evData* rdEvLst(char *filename, long *n)
                         &(evdat[i].evla), &(evdat[i].evlo), &(evdat[i].evel), &(evdat[i].evdp), 
                         evdat[i].evTime.KDATE, evdat[i].evTime.KTIME,
                         evdat[i].imagtype, &(evdat[i].mag) );
+                evdat[i].evnm[15] = 0;
                 rtime( &(evdat[i].evTime) );
         }
         fclose(fp);
@@ -163,13 +164,13 @@ int fdFile(evData  *evdat,  const long _evnum ,
             FILE *fp)
 {
 
-        int i,j;
+        int i,j,k;
         //sacData *sacdat = _sacdat;
         //evData  *evdat  = _evdat;
 
         //sacData **lst = (sacData **) calloc(MERGEMAX, sizeof(*sacData));
         int   found;
-        float delta,trvt, p, dtES;
+        float delta,trvt, p, dtES, dtES_head = 0.0f;
         float *t, *rp, *dtdh, *dddp, *mn, *ts, *toa;
         int   nph;
         char  (*phnm)[9];
@@ -180,28 +181,35 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
-                ctau("P   ", evdat[j].evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                ctau("P   ", (evdat[j]).evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                //for(k = 0; k < 2; ++k)
+                //    printf("%s %f  ", phnm[k] ,t[k] );
+                //ctau("P   ", 0.0f, 60.115402f,       &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
+                    //printf("||  ");
                 trvt = t[0];
                 p    = rp[0];
 
                 //printf("%f %f %f %f :", evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
-                //printf("%f %f %f\n", delta,  evdat[j].evdp, trvt );
-                found = 0;
-                nlst = 0L;
+                //printf("%04d %f %f %f\n", j, delta,  evdat[j].evdp, trvt );
+                found = 0; // 0: Not found 1: Found
+                nlst = 0L; // Number of sac files intersect with the time interval
+
+                // Find the sac file that totally cover the time interval I want
                 for( i = 0; i < _sacnum; ++i )
                 {
                         dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
                         if( (dtES + sacdat[i].b) <= (trvt + pre) &&
                             (dtES + sacdat[i].e) >= (trvt + suf)    )
                             //                              B  SAC FILE     E
-                            // ----------------O------------|********A******|---------
+                            // ----------------O------------|********A******|---------   original trace
                             //                 |<--     trvt      -->|
-                            // ---------------------------------|********|------------
+                            // ---------------------------------|********|------------   trace I want
                             //                              trvt+pre    trvt+suf
                         {
                                 lst[nlst] = &( sacdat[i] );
                                 nlst  = 1L;
                                 found = 1;
+                                dtES_head = dtES;
                                 //Add by wangsheng 2015/09/18
                                 //For debug
                                 #ifdef DEBUG
@@ -237,6 +245,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                 break;
                         }*/
                 }
+
+                // Find all the sac files that intersect with the time interval I want
                 if( found != 1)
                 {
                         ISHead = 0;
@@ -291,6 +301,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                             ((trvt + suf) >= (dtES + sacdat[i].e))
                                    )
                                 {
+                                        dtES_head = dtES;
                                         ISHead = 1;
                                         lst[nlst] = &( sacdat[i] );
                                         ++nlst;
@@ -325,7 +336,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                         ++nlst;
                                 }
                         }
-                        if( ISHead != 1 || ISTail != 1)
+                        if( ISHead != 1 || ISTail != 1) // The head and tail of the trace I want must be covered by some sacfiles
                                 continue;
                         //Add by wangsheng 2015/09/18
                         //For debug
@@ -351,9 +362,10 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                                        ev->evTime.hour, ev->evTime.min, ev->evTime.sec, ev->evTime.msec);
                         #endif
                         /////////////////
-                        geneSacCmd(Line, trvt - dtES, dtES, p,
+                        geneSacCmd(Line, trvt - dtES_head, dtES_head, p,
                                    pre, suf,
                                    fp );
+                        //printf("%f %f %f\n", trvt , dtES_head, trvt - dtES_head );
                 }
                 /*{
                         //For BHZ
@@ -398,6 +410,7 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                const float pre, const float suf,
                FILE *fp)
 {
+    (ev->evnm)[15] = 0;
         int i;
         if(nlst == 1L)
         {
@@ -419,9 +432,11 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
 
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
+                //fprintf(fp, "%s\n", );
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
-                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %15s mag %f\n", ev->evnm, ev->mag);
                 //Add by wangsheng 2015/11/08
                 fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
@@ -465,7 +480,8 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
                 fprintf(fp, "r %s.BH? \n",outfile );
                 //Add by wangsheng 2015/09/01
-                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                //fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %ld mag %f\n", ev->evcount, ev->mag);
+                fprintf(fp, "ch allt (0 - &1,o&) IZTYPE IO kevnm %15s mag %f\n", ev->evnm, ev->mag);
                 //Add by wangsheng 2015/11/08
                 fprintf(fp, "rmean;rtr;rmean;taper\n");
                 //
