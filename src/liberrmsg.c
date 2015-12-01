@@ -16,7 +16,8 @@ char* errmsg[] = {
     /* 10 */      "Communication time out",
     /* 11 */      "More arguments are required",
     /* 12 */      "Allocate memory failed",
-    /* 13 */      "Data is out of range"
+    /* 13 */      "Data is out of range",
+    /* 14 */      "Wrong argments"
 };
 
 // 打印出错信息函数

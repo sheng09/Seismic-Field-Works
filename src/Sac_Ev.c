@@ -159,7 +159,7 @@ static evData    *ev;
 
 int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
-            const float pre, const float suf,
+            const char cutRef, const float pre, const float suf,
             const float gcmin, const float gcmax,
             FILE *fp)
 {
@@ -171,6 +171,7 @@ int fdFile(evData  *evdat,  const long _evnum ,
         //sacData **lst = (sacData **) calloc(MERGEMAX, sizeof(*sacData));
         int   found;
         float delta,trvt, p, dtES, dtES_head = 0.0f;
+        float cut_RefT = 0.0f;
         float *t, *rp, *dtdh, *dddp, *mn, *ts, *toa;
         int   nph;
         char  (*phnm)[9];
@@ -181,30 +182,37 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
+                //Calculate traveltime and ray parameter
                 ctau("P   ", (evdat[j]).evdp, delta, &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
-                //for(k = 0; k < 2; ++k)
-                //    printf("%s %f  ", phnm[k] ,t[k] );
-                //ctau("P   ", 0.0f, 60.115402f,       &t, &rp, &dtdh, &dddp, &mn, &ts, &toa, &nph, &phnm);
-                    //printf("||  ");
                 trvt = t[0];
                 p    = rp[0];
+                if(cutRef == CUT_REF_P)
+                {
+                    cut_RefT = trvt;
+                }
+                else if(cutRef == CUT_REF_O)
+                {
+                    cut_RefT = 0.0f;
+                }
 
-                //printf("%f %f %f %f :", evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
-                //printf("%04d %f %f %f\n", j, delta,  evdat[j].evdp, trvt );
+                //printf("%c %f %f\n", cutRef, pre, suf);
+
                 found = 0; // 0: Not found 1: Found
                 nlst = 0L; // Number of sac files intersect with the time interval
 
                 // Find the sac file that totally cover the time interval I want
                 for( i = 0; i < _sacnum; ++i )
                 {
-                        dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
-                        if( (dtES + sacdat[i].b) <= (trvt + pre) &&
-                            (dtES + sacdat[i].e) >= (trvt + suf)    )
-                            //                              B  SAC FILE     E
-                            // ----------------O------------|********A******|---------   original trace
-                            //                 |<--     trvt      -->|
+                        dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );  // refT(B) - evTime(O)
+                        if( (dtES + sacdat[i].b) <= (cut_RefT + pre) &&
+                            (dtES + sacdat[i].e) >= (cut_RefT + suf)    )
+                            //                      
+                            //                 |<-- dtES -->|
+                            //                              B  SAC FILE       E
+                            // ----------------O------------|********Ref******|---------   original trace
+                            //                 |<--  cut_RefT      -->|
                             // ---------------------------------|********|------------   trace I want
-                            //                              trvt+pre    trvt+suf
+                            //                        cut_RefT+pre    cut_RefT+suf
                         {
                                 lst[nlst] = &( sacdat[i] );
                                 nlst  = 1L;
@@ -218,32 +226,6 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                 ////////////////////
                                 break;
                         }
-                        /*{
-                                // [trvt+pre, trvt+suf] is included in [b,e]
-                                found = 1;
-                                //For BHZ
-                                fprintf(fp, "r %s.BHZ\n", sacdat[i].sacnm );
-                                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                                    -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                                fprintf(fp, "w %s.BHZ \n",Line);
-                                //For BHN
-                                fprintf(fp, "r %s.BHN\n", sacdat[i].sacnm );
-                                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                                    -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                                fprintf(fp, "w %s.BHN \n",Line);
-                                //For BHE
-                                fprintf(fp, "r %s.BHE\n", sacdat[i].sacnm );
-                                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                                    -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                                fprintf(fp, "w %s.BHE \n",Line);
-
-                                //Cut
-                                fprintf(fp, "cut t0 %f %f\n", pre,  suf);
-                                fprintf(fp, "r %s.BH? \n",Line );
-                                fprintf(fp, "w over \n" );
-                                fprintf(fp, "cut off \n");
-                                break;
-                        }*/
                 }
 
                 // Find all the sac files that intersect with the time interval I want
@@ -254,51 +236,18 @@ int fdFile(evData  *evdat,  const long _evnum ,
                         for( i = 0; i < _sacnum; ++i)
                         {
                                 dtES = dt( &(sacdat[i].refT), &(evdat[j].evTime) );
-                                /*
-                                if(
-                                     (
-                                        //                              B   SAC FILE    E
-                                        // ----------------O------------|************A**|---------
-                                        //                 |<--          trvt        -->|
-                                        // ---------------------------------------|**********|----
-                                        //                                    trvt+pre    trvt+suf
-                                        ((trvt + pre) <= (dtES + sacdat[i].e))
-                                        &&
-                                        ((trvt + suf) >= (dtES + sacdat[i].e))
-                                     )
-                                     ||
-                                     (
-                                        //                              B  SAC FILE     E
-                                        // ----------------O------------|**A************|---------
-                                        //                 |<--   trvt  -->|
-                                        // -------------------------|**********|------------------
-                                        //                       trvt+pre    trvt+suf
-                                        ((trvt + pre) <= (dtES + sacdat[i].b))
-                                        &&
-                                        ((trvt + suf) >= (dtES + sacdat[i].b))
-                                     )
-                                     ||
-                                     (
-                                        //                              B  SAC FILE     E
-                                        // ----------------O------------|********A******|---------
-                                        //                 |<--     trvt      -->|
-                                        // -------------------------|************************|----
-                                        //                        trvt+pre                trvt+suf
-                                        ((trvt + pre) <= (dtES + sacdat[i].b))
-                                        &&
-                                        ((trvt + suf) >= (dtES + sacdat[i].e))
-                                     )
-                                  )*/
                                 //Revised by wangsheng 2015/09/18
                                 if(
+                                            //
+                                            //                 |<-- dtES -->|
                                             //                              B   SAC FILE    E
-                                            // ----------------O------------|************A**|---------
-                                            //                 |<--          trvt        -->|
+                                            // ----------------O------------|************Ref**|---------
+                                            //                 |<--    cut_RefT        -->|
                                             // ---------------------------------------|**********|----
-                                            //                                    trvt+pre    trvt+suf
-                                            ((trvt + pre) <= (dtES + sacdat[i].e))
+                                            //                              cut_RefT+pre    cut_RefT+suf
+                                            ((cut_RefT + pre) <= (dtES + sacdat[i].e))
                                             &&
-                                            ((trvt + suf) >= (dtES + sacdat[i].e))
+                                            ((cut_RefT + suf) >= (dtES + sacdat[i].e))
                                    )
                                 {
                                         dtES_head = dtES;
@@ -307,14 +256,16 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                         ++nlst;
                                 }
                                 else if(
+                                            //
+                                            //                 |<-- dtES -->|
                                             //                              B  SAC FILE     E
-                                            // ----------------O------------|**A************|---------
-                                            //                 |<--   trvt  -->|
-                                            // -------------------------|**********|------------------
-                                            //                       trvt+pre    trvt+suf
-                                            ((trvt + pre) <= (dtES + sacdat[i].b))
+                                            // ----------------O------------|***Ref**********|---------
+                                            //                 |<-- cut_RefT  -->|
+                                            // -------------------------|**********|-------------------
+                                            //                  cut_RefT+pre    cut_RefT+suf
+                                            ((cut_RefT + pre) <= (dtES + sacdat[i].b))
                                             &&
-                                            ((trvt + suf) >= (dtES + sacdat[i].b))
+                                            ((cut_RefT + suf) >= (dtES + sacdat[i].b))
                                         )
                                 {
                                         ISTail = 1;
@@ -322,19 +273,30 @@ int fdFile(evData  *evdat,  const long _evnum ,
                                         ++nlst;
                                 }
                                 else if(
+                                            //
+                                            //                 |<-- dtES -->|
                                             //                              B  SAC FILE     E
-                                            // ----------------O------------|********A******|---------
-                                            //                 |<--     trvt      -->|
+                                            // ----------------O------------|********Ref****|---------
+                                            //                 |<--     cut_RefT   -->|
                                             // -------------------------|************************|----
-                                            //                        trvt+pre                trvt+suf
-                                            ((trvt + pre) <= (dtES + sacdat[i].b))
+                                            //                    cut_RefT+pre                cut_RefT+suf
+                                            ((cut_RefT + pre) <= (dtES + sacdat[i].b))
                                             &&
-                                            ((trvt + suf) >= (dtES + sacdat[i].e))
+                                            ((cut_RefT + suf) >= (dtES + sacdat[i].e))
                                         )
                                 {
                                         lst[nlst] = &( sacdat[i] );
                                         ++nlst;
                                 }
+                                //Results:
+                                //
+                                //
+                                //--------|*********************|--------------------------------------------------------- lst[ 0 ]
+                                //------------------------------|**************|------------------------------------------ lst[ 1 ]
+                                //---------------------------------------------|**************|--------------------------- lst[ 2 ]
+                                //------------------------------------------------------------|**************|------------ lst[ 3 ]
+                                //        |<--         dtES_head          -->|                    
+                                //-------------------------|*****************O*******A****************|-------------------
                         }
                         if( ISHead != 1 || ISTail != 1) // The head and tail of the trace I want must be covered by some sacfiles
                                 continue;
@@ -361,53 +323,32 @@ int fdFile(evData  *evdat,  const long _evnum ,
                         fprintf(fp, "# EVTIME: %04d/%02d/%02d %02d:%02d:%02d.%03d\n", ev->evTime.year, ev->evTime.mon, ev->evTime.day,
                                                        ev->evTime.hour, ev->evTime.min, ev->evTime.sec, ev->evTime.msec);
                         #endif
-                        /////////////////
-                        geneSacCmd(Line, trvt - dtES_head, dtES_head, p,
-                                   pre, suf,
-                                   fp );
-                        //printf("%f %f %f\n", trvt , dtES_head, trvt - dtES_head );
-                }
-                /*{
-                        //For BHZ
-                        fprintf(fp, "r ");
-                        for( i = 0; i < nlst; ++i)
-                        {
-                                fprintf(fp, "%s.BHZ ", lst[i]->sacnm );
-                        }
-                        fprintf(fp, "\nch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                            -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                        fprintf(fp, "w %s.BHZ \n",Line);
-                        //For BHN
-                        fprintf(fp, "r ");
-                        for( i = 0; i < nlst; ++i)
-                        {
-                                fprintf(fp, "%s.BHN ", lst[i]->sacnm );
-                        }
-                        fprintf(fp, "\nch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                            -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                        fprintf(fp, "w %s.BHN \n",Line);
-                        //For BHE
-                        fprintf(fp, "r ");
-                        for( i = 0; i < nlst; ++i)
-                        {
-                                fprintf(fp, "%s.BHE ", lst[i]->sacnm );
-                        }
-                        fprintf(fp, "\nch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                            -dtES ,p, evdat[j].evla, evdat[j].evlo, evdat[j].evdp, evdat[j].evel, trvt - dtES);
-                        fprintf(fp, "w %s.BHE \n",Line);
-                        //Cut
-                        fprintf(fp, "cut t0 %f %f\n", pre,  suf);
-                        fprintf(fp, "r %s.BH? \n",Line );
-                        fprintf(fp, "w over \n" );
-                        fprintf(fp, "cut off \n");
-                }*/
 
+                        //geneSacCmd(Line, cut_RefT - dtES_head, -dtES_head, p,
+                        //           pre, suf,
+                        //           fp );
+                        //printf("%f %f %f\n", trvt , dtES_head, trvt - dtES_head );
+
+                        // Revised by Wangsheng 2015/12/01
+                        // cut reference time repspect to B: (cut_RefT-dtES_head)
+                        // travltime with respect to B     : (trvt-dtES_head)
+                        // origin time with respect to B   : -dtES_head
+                        geneSacCmd(Line, cut_RefT-dtES_head, pre, suf,
+                                    -dtES_head, trvt-dtES_head, p,
+                                    fp);
+                }
         }
         return 1;
 }
 
-int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
-               const float pre, const float suf,
+
+//int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
+//               const float pre, const float suf,
+//               FILE *fp)
+
+// Revised by Wangsheng 2015/12/01
+int geneSacCmd(char *outfile, const float ref_time, const float pre, const float suf,
+               const float t_origin, const float t_p, const float rayp,
                FILE *fp)
 {
     (ev->evnm)[15] = 0;
@@ -416,19 +357,22 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
         {
                 //For BHZ
                 fprintf(fp, "r %s.BHZ\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f  user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHZ \n",outfile);
+
                 //For BHN
                 fprintf(fp, "r %s.BHN\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHN \n",outfile);
+
                 //For BHE
                 fprintf(fp, "r %s.BHE\n", (*lst)->sacnm );
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHE \n",outfile);
+
 
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
@@ -453,9 +397,10 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHZ ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHZ \n",outfile);
+
                 //For BHN
                 fprintf(fp, "r ");
                 for( i = 0; i < nlst; ++i)
@@ -463,9 +408,10 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHN ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHN \n",outfile);
+
                 //For BHE
                 fprintf(fp, "r ");
                 for( i = 0; i < nlst; ++i)
@@ -473,9 +419,11 @@ int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
                         fprintf(fp, "%s.BHE ", lst[i]->sacnm );
                 }
                 fprintf(fp, "\nmerge\n");
-                fprintf(fp, "ch o %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
-                    -dtES ,p, ev->evla, ev->evlo, ev->evdp, ev->evel, t0);
+                fprintf(fp, "ch o %f a %f user0 %f evla %f evlo %f evdp %f evel %f t0 %f\n", 
+                    t_origin , t_p, rayp, ev->evla, ev->evlo, ev->evdp, ev->evel, ref_time);
                 fprintf(fp, "w %s.BHE \n",outfile);
+
+
                 //Cut
                 fprintf(fp, "cut t0 %f %f\n", pre,  suf);
                 fprintf(fp, "r %s.BH? \n",outfile );

@@ -2,7 +2,8 @@
 # Wangsheng, IGG-CAS
 # wangsheng.cas@gmail.com
 # 2015/7/22
-HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W pre_time/suf_time -G deg1/deg2 -O <dest Dir>"
+HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W [O|P]pre_time/suf_time -G deg1/deg2 -O <dest Dir> [-V]"
+VERBOSE=""
 while  getopts  "D:E:W:G:O:V"  arg #选项后面的冒号表示该选项需要参数
 do
          case  $arg  in
@@ -19,7 +20,7 @@ do
                 GCWINDOWS=$OPTARG
                 ;;
              V)
-                VERBOSE=""
+                VERBOSE="-V"
                 ;;
              O)
                 DEST=${OPTARG}
@@ -75,7 +76,7 @@ saclst kstnm knetwk kzdate kztime b e \
 #    2. Generate SAC script file
 #####
 
-cut4Ev -E evlist.tmp -D sacinfo.tmp -C $WINDOWS -G $GCWINDOWS
+cut4Ev -E evlist.tmp -D sacinfo.tmp -C $WINDOWS -G $GCWINDOWS ${VERBOSE}
 chmod 777 sacCMD.sh
 
 rm ${DEST} -rf 2>&-

@@ -10,12 +10,13 @@
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -C t1/t2 -G deg1/deg2 -E event.list -D sacinfo\n\
+Usage: %-6s -C [O|P]/t1/t2 -G deg1/deg2 -E event.list -D sacinfo [-V]\n\
 \n\
-(-C t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
+(-C [O|P]/t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
 (-G deg1/deg2)  : windows data within great circle distance [deg1, deg2]\n\
 (-E event.list) : events list file\n\
 (-D sacinfo)    : sac files info list file\n\
+[-V]            : open verbose\n\
 [-H] Display this message.\n\
 \n\
 This program is used to generate 'sacCMD.sh' bash script for select and cut sac files.\n\
@@ -53,7 +54,7 @@ sacinfo file format is:\n\
     thus you just need to generate 'file' for *.BHZ only.\n\
 \n\
 Example:\n\
-  cut4Ev -C-10/60 -G 30/90 -E event.list -D sacinfo\n\
+  cut4Ev -C P/-10/60 -G 30/90 -E event.list -D sacinfo\n\
 \n\
 "};
 int main(int argc, char *argv[])
@@ -67,8 +68,10 @@ int main(int argc, char *argv[])
         evData  *evdat;
         long nsac, nev;
         float pre, suf;
+        char  cutRef = 'P';
         float gcmin = -180.0f, gcmax = 720.0f;
         int   fgpre_suf = 0;
+        int   fgverbose = 0;
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
         {
@@ -85,7 +88,7 @@ int main(int argc, char *argv[])
                                         fgSac = 1;
                                         break;
                                 case 'C':
-                                        sscanf(argv[i+1], "%f/%f", &pre, &suf);
+                                        sscanf(argv[i+1], "%c/%f/%f", &cutRef, &pre, &suf);
                                         fgpre_suf = 1;
                                         break;
                                 case 'G':
@@ -94,6 +97,9 @@ int main(int argc, char *argv[])
                                         break;
                                 case 'O':
                                         strcpy(sacCMD, argv[i+1]);
+                                        break;
+                                case 'V':
+                                        fgverbose = 1;
                                         break;
                                 case 'H':
                                         fprintf(stderr, HMSG, argv[0]);
@@ -108,6 +114,12 @@ int main(int argc, char *argv[])
                 //printf("%s\n", );
                 fprintf(stderr, HMSG, argv[0]);
                 exit(1);
+        }
+        if(cutRef != 'P' && cutRef != 'O')
+        {
+            perrmsg("",ERR_BAD_ARGS);
+            fprintf(stderr, "\' -C %c\'\n", cutRef);
+            exit(1);
         }
         sacdat = rdSacLst(strSac, &nsac);
         evdat  = rdEvLst(strEv, &nev);
@@ -124,8 +136,11 @@ int main(int argc, char *argv[])
         //Add by wangsheng 2015/09/02
         fprintf(fp, "mkdir ._out 2>&- || rm ._out/* -rf 2>&-\n");
         //
-        fprintf(fp, "sac << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, pre, suf, gcmin, gcmax , fp);
+        if(fgverbose == 1)
+            fprintf(fp, "sac << EOF\n" );
+        else if(fgverbose == 0)
+            fprintf(fp, "sac >/dev/null << EOF\n" );
+        fdFile( evdat, nev, sacdat, nsac, cutRef, pre, suf, gcmin, gcmax , fp);
         fprintf(fp, "q\nEOF\n" );
         free(sacdat);
         free(evdat);
