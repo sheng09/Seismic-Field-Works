@@ -161,6 +161,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
             const char cutRef, const float pre, const float suf,
             const float gcmin, const float gcmax,
+            const float minMag, const float maxMag,
+            char  *sacnmPre,
             FILE *fp)
 {
 
@@ -179,6 +181,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
         //char Line[MAXLENGTH];
         for(j = 0; j < _evnum; ++j)
         {
+                if( evdat[j].mag < minMag || evdat[j].mag > maxMag ) // Add by WangSheng 2015/12/02
+                    continue;
                 delta = DisLaLo(evdat[j].evla, evdat[j].evlo, sacdat[0].stla, sacdat[0].stlo);
                 if( gcmin > delta || gcmax < delta ) // Out of range
                         continue;
@@ -311,7 +315,8 @@ int fdFile(evData  *evdat,  const long _evnum ,
                 if( nlst > 0L)
                 {
                         memset(Line, 0, MAXLENGTH);
-                        sprintf(Line, "._out/EV%05ld", evdat[j].evcount);
+                        //sprintf(Line, "._out/EV%05ld", evdat[j].evcount);
+                        sprintf(Line, "._out/%s%05ld", sacnmPre , evdat[j].evcount);
                         ev = &(evdat[j]);
 
                         //Add by wangsheng 2015/09/18

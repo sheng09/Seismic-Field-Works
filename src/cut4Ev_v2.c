@@ -10,12 +10,17 @@
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -C [O|P]/t1/t2 -G deg1/deg2 -E event.list -D sacinfo [-V]\n\
+Usage: %-6s -C [O|P]/t1/t2 -G deg1/deg2 [-M min/max] -E event.list -D sacinfo [-P Prefilename] [-V]\n\
 \n\
 (-C [O|P]/t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
 (-G deg1/deg2)  : windows data within great circle distance [deg1, deg2]\n\
+[-M min/max]    : magnitude interval\n\
+                  Defualt is select all magnitude.\n\
 (-E event.list) : events list file\n\
 (-D sacinfo)    : sac files info list file\n\
+[-P] Prefilename: pre for output sac files' name. \n\
+                  No more than 7 characters!\n\
+                  Characters must be [A-z,a-z,_]!\n\
 [-V]            : open verbose\n\
 [-H] Display this message.\n\
 \n\
@@ -54,14 +59,14 @@ sacinfo file format is:\n\
     thus you just need to generate 'file' for *.BHZ only.\n\
 \n\
 Example:\n\
-  cut4Ev -C P/-10/60 -G 30/90 -E event.list -D sacinfo\n\
+  cut4Ev -C P/-10/60 -G 30/90 -M 5.5/6.0 -E event.list -D sacinfo -P ISC -V\n\
 \n\
 "};
 int main(int argc, char *argv[])
 {
         FILE *fp;
         char *strEv = NULL, *strSac = NULL;
-        int   fgEv = 0, fgSac = 0, fggc = 0;
+        int   fgEv = 0, fgSac = 0, fggc = 0, fgmag = 0;
         int   i;
         char  sacCMD[32]="sacCMD.sh";
         sacData *sacdat;
@@ -70,8 +75,10 @@ int main(int argc, char *argv[])
         float pre, suf;
         char  cutRef = 'P';
         float gcmin = -180.0f, gcmax = 720.0f;
+        float minMag = -1.0, maxMag = 10.0;
         int   fgpre_suf = 0;
         int   fgverbose = 0;
+        char  sacnmPre[8] = "EV";
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
         {
@@ -94,6 +101,13 @@ int main(int argc, char *argv[])
                                 case 'G':
                                         sscanf(argv[i+1], "%f/%f", &gcmin, &gcmax);
                                         fggc = 1;
+                                        break;
+                                case 'M': // Add -M option by WangSheng 2015/12/02
+                                        sscanf(argv[i+1],"%f/%f", minMag, maxMag);
+                                        fgmag = 1;
+                                        break;
+                                case 'P': //Add -P option by WangSheng 2015/12/02
+                                        strcpy(sacnmPre, argv[i+1]);
                                         break;
                                 case 'O':
                                         strcpy(sacCMD, argv[i+1]);
@@ -121,6 +135,25 @@ int main(int argc, char *argv[])
             fprintf(stderr, "\' -C %c\'\n", cutRef);
             exit(1);
         }
+
+        // Add -M option by WangSheng 2015/12/02
+        if(minMag > maxMag || maxMag < 0.0 || minMag > 10.0)
+        {
+            perrmsg("",ERR_BAD_ARGS);
+            fprintf(stderr, "\' -M %f/%f \'\n", minMag, maxMag);
+            exit(1);
+        }
+
+        //Add -P option by WangSheng 2015/12/02
+        sacnmPre[7] = 0;
+        for(i = 6; i >=0 ;--i)
+        {
+            if( ! ( ( sacnmPre[i] < 'z' && sacnmPre > 'a' ) || ( sacnmPre[i] < 'Z' && sacnmPre > 'A' ) ) )
+            {
+                sacnmPre[i] = '_';
+            }
+        }
+        //
         sacdat = rdSacLst(strSac, &nsac);
         evdat  = rdEvLst(strEv, &nev);
 
@@ -140,7 +173,7 @@ int main(int argc, char *argv[])
             fprintf(fp, "sac << EOF\n" );
         else if(fgverbose == 0)
             fprintf(fp, "sac >/dev/null << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, cutRef, pre, suf, gcmin, gcmax , fp);
+        fdFile( evdat, nev, sacdat, nsac, cutRef, pre, suf, gcmin, gcmax , minMag, maxMag, sacnmPre , fp);
         fprintf(fp, "q\nEOF\n" );
         free(sacdat);
         free(evdat);
