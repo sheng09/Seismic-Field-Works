@@ -97,7 +97,11 @@ int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
             const char cutRef, const float pre, const float suf,
             const float gcmin, const float gcmax,
+            const float minMag, const float maxMag,  // Add by WangSheng 2015/12/02
+            char  *sacnmPre,
             FILE *fp);
+
+
 int geneSacCmd(char *outfile, const float ref_time, const float pre, const float suf,
                const float t_origin, const float t_p, const float rayp,
                FILE *fp);
