@@ -91,4 +91,4 @@ mv ._out ${DEST}
 
 rm *.tmp -rf
 
-#rm sacCMD.sh
+rm sacCMD.sh

@@ -123,6 +123,7 @@ float* nrootStack(float **trace, int ntrace, int len, float **ak, float NRoot)
 {
         int i, j;
         float *x;
+        float V_abs, N_abs;
         memset(*ak, len, sizeof(float));
         if( NRoot == 1.0f )
         {
@@ -134,9 +135,17 @@ float* nrootStack(float **trace, int ntrace, int len, float **ak, float NRoot)
                 x = trace[i];
                 for(j = 0; j < len; ++j)
                 {
-                        if(x[j] > 1.0e-6f)
+                        V_abs = fabsf(x[j]);
+                        if( V_abs > 1.0e-6f)
                         {
-                                (*ak)[j] += (expf(logf( fabsf(x[j]) ) / NRoot ) ) * ( x[j] / fabsf(x[j]) );
+                                //(*ak)[j] += (expf(logf( fabsf(x[j]) ) / NRoot ) ) * ( x[j] / fabsf(x[j]) );
+
+                                //Revised by WangSheng 2015/12/03
+                                N_abs  = expf(logf(V_abs)/NRoot);
+                                if(x[j] > 0.0f)
+                                    (*ak)[j] += N_abs;
+                                else
+                                    (*ak)[j] -= N_abs;
                         }
                 }
         }
