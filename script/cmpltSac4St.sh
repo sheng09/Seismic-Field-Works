@@ -2,7 +2,14 @@
 # Wangsheng, IGG-CAS
 # wangsheng.cas@gmail.com
 # 2015/7/22
-HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W [O|P]pre_time/suf_time -G deg1/deg2 [-M minMag/maxMag] [-P Presacname] -O <dest Dir> [-V]"
+HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W [O|P]/pre_time/suf_time -G <deg1/deg2> [-M minMag/maxMag] [-P Presacname] -O <dest Dir> [-V]\n\
+-D <directory> where SAC files store. And sac filename format should be \"YYYY.DDD.HH.MM.SS.FFFF.NN.SSSSS.LL.BH[NEZ]\"\n\
+-E <filename>  event list file \n\
+-W [O|P]/pre_time/suf_time \n\
+-G deg1/deg2 \n\
+-O <dest directory> \n\
+[-V] verbose \n\
+"
 VERBOSE=""
 while  getopts  "D:E:W:G:O:M:P:V"  arg #选项后面的冒号表示该选项需要参数
 do
