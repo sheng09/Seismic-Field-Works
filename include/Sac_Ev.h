@@ -1,15 +1,15 @@
 #ifndef __SAC_EV__
 #define __SAC_EV__
 
-#define MERGEMAX  50
-#define MAXLENGTH 1024
+#define MERGEMAX  999
+#define MAXLENGTH 4096
 
 #define CUT_REF_P 'P'
 #define CUT_REF_O 'O'
 
 typedef struct
 {
-        char  sacnm[64];
+        char  sacnm[128];
         char  stnm[8];
         char  ntwk[8];
         Time  refT;
