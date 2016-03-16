@@ -85,6 +85,7 @@ saclst kstnm knetwk kzdate kztime b e \
        stla stlo stel stdp f ${DIR}/*.BHZ  | \
        sed 's/.BHZ//g' | \
        sort -n >> sacinfo.tmp
+
 #####
 #    2. Generate SAC script file
 #####
