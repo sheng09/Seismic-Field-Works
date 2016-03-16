@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         float minMag = -1.0, maxMag = 10.0;
         int   fgpre_suf = 0;
         int   fgverbose = 0;
-        char  sacnmPre[8] = "EV";
+        char  sacnmPre[128] = "EV";
         //Point pe, ps;
         for(i = 1; i < argc ; ++i)
         {
@@ -145,14 +145,14 @@ int main(int argc, char *argv[])
         }
 
         //Add -P option by WangSheng 2015/12/02
-        sacnmPre[7] = 0;
-        for(i = 6; i >=0 ;--i)
-        {
-            if( ! ( ( sacnmPre[i] < 'z' && sacnmPre > 'a' ) || ( sacnmPre[i] < 'Z' && sacnmPre > 'A' ) ) )
-            {
-                sacnmPre[i] = '_';
-            }
-        }
+        sacnmPre[127] = 0;
+        //for(i = 6; i >=0 ;--i)
+        //{
+        //    if( ! ( ( sacnmPre[i] < 'z' && sacnmPre > 'a' ) || ( sacnmPre[i] < 'Z' && sacnmPre > 'A' ) ) )
+        //    {
+        //        sacnmPre[i] = '_';
+        //    }
+        //}
         //
         sacdat = rdSacLst(strSac, &nsac);
         evdat  = rdEvLst(strEv, &nev);
