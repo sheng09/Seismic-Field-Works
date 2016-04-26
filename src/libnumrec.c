@@ -103,7 +103,8 @@ float* linearStack(float **trace, int ntrace, int len, float **ak)
 {
         int i, j;
         float *x;
-        memset(*ak, len, sizeof(float));
+        //memset(*ak, len, sizeof(float)); Debug by ShengWang at 2016/04/26
+        memset(*ak, 0, len * sizeof(float));
         for( i = 0; i < ntrace; ++i)
         {
                 x = trace[i];
@@ -124,7 +125,8 @@ float* nrootStack(float **trace, int ntrace, int len, float **ak, float NRoot)
         int i, j;
         float *x;
         float V_abs, N_abs;
-        memset(*ak, len, sizeof(float));
+        //memset(*ak, len, sizeof(float)); Debug by ShengWang at 2016/04/26
+        memset(*ak, 0, len * sizeof(float));
         if( NRoot == 1.0f )
         {
                 linearStack(trace, ntrace, len, ak);
