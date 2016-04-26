@@ -2,8 +2,16 @@
 # Wangsheng, IGG-CAS
 # wangsheng.cas@gmail.com
 # 2015/7/22
-HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W pre_time/suf_time -G deg1/deg2 -O <dest Dir>"
-while  getopts  "D:E:W:G:O:V"  arg #选项后面的冒号表示该选项需要参数
+HMSG="Usage: cmpltSac4St.sh -D <directory> -E <event.list> -W [O|P]/pre_time/suf_time -G <deg1/deg2> [-M minMag/maxMag] [-P Presacname] -O <dest Dir> [-V]\n\
+-D <directory> where SAC files store. And sac filename format should be \"YYYY.DDD.HH.MM.SS.FFFF.NN.SSSSS.LL.BH[NEZ]\"\n\
+-E <filename>  event list file \n\
+-W [O|P]/pre_time/suf_time \n\
+-G deg1/deg2 \n\
+-O <dest directory> \n\
+[-V] verbose \n\
+"
+VERBOSE=""
+while  getopts  "D:E:W:G:O:M:P:V"  arg #选项后面的冒号表示该选项需要参数
 do
          case  $arg  in
              D)
@@ -18,8 +26,14 @@ do
              G)
                 GCWINDOWS=$OPTARG
                 ;;
+             M)
+                MAGOPT="-M $OPTARG"
+                ;;
+             P)
+                PRENAME="-P $OPTARG"
+                ;;
              V)
-                VERBOSE=""
+                VERBOSE="-V"
                 ;;
              O)
                 DEST=${OPTARG}
@@ -71,11 +85,12 @@ saclst kstnm knetwk kzdate kztime b e \
        stla stlo stel stdp f ${DIR}/*.BHZ  | \
        sed 's/.BHZ//g' | \
        sort -n >> sacinfo.tmp
+
 #####
 #    2. Generate SAC script file
 #####
 
-cut4Ev -E evlist.tmp -D sacinfo.tmp -C $WINDOWS -G $GCWINDOWS
+cut4Ev -E evlist.tmp -D sacinfo.tmp -C $WINDOWS -G $GCWINDOWS ${MAGOPT} ${PRENAME} ${VERBOSE}
 chmod 777 sacCMD.sh
 
 rm ${DEST} -rf 2>&-
@@ -84,4 +99,4 @@ mv ._out ${DEST}
 
 rm *.tmp -rf
 
-#rm sacCMD.sh
+rm sacCMD.sh

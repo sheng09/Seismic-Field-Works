@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
                     hdrout.evlo  = sachdr.evlo;
 
                     ak = (float *) calloc(sachdr.npts, sizeof(float) );
-                    memset(ak, 0, sizeof(float) * sachdr.npts );
+                    //memset(ak, 0, sizeof(float) * sachdr.npts );
                 }
 
 

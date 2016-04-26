@@ -1,11 +1,15 @@
 #ifndef __SAC_EV__
 #define __SAC_EV__
 
-#define MERGEMAX  50
-#define MAXLENGTH 1024
+#define MERGEMAX  999
+#define MAXLENGTH 4096
+
+#define CUT_REF_P 'P'
+#define CUT_REF_O 'O'
+
 typedef struct
 {
-        char  sacnm[64];
+        char  sacnm[128];
         char  stnm[8];
         char  ntwk[8];
         Time  refT;
@@ -91,10 +95,14 @@ int wrtEvLst(char *filename, evData *evdat, const long n);
 
 int fdFile(evData  *evdat,  const long _evnum ,
            sacData *sacdat, const long _sacnum,
-            const float pre, const float suf,
+            const char cutRef, const float pre, const float suf,
             const float gcmin, const float gcmax,
+            const float minMag, const float maxMag,  // Add by WangSheng 2015/12/02
+            char  *sacnmPre,
             FILE *fp);
-int geneSacCmd(char *outfile, const float t0, const float dtES, const float p,
-               const float pre, const float suf,
+
+
+int geneSacCmd(char *outfile, const float ref_time, const float pre, const float suf,
+               const float t_origin, const float t_p, const float rayp,
                FILE *fp);
 #endif
