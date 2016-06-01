@@ -33,6 +33,7 @@ all: ${OBJ} ${LIBS} ${LIB_ALL} ${EXEC_PART1} ${EXEC_PART2}
 install:
 	-mkdir ${install_libdir} ${install_bindir} ${install_incdir} 2>&-
 	cp ${EXEC_PART1} ${EXEC_PART2} ${install_bindir}
+	cp ../script/* ${install_bindir}
 	cp ${LIB_ALL} ${install_libdir}
 	cp ../include/*.h  ${install_incdir}
 
