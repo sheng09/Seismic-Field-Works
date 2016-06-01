@@ -19,5 +19,5 @@ SFW:
 	make -C src install
 
 clean:
-	make clean -C src
-	make clean -C src/C_ttimes
+	-make clean -C src/C_ttimes
+	-make clean -C src

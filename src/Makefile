@@ -9,9 +9,9 @@ cttims_home = ${cttimes_home_tmp}
 lib_cttims_home = ${cttimes_home_tmp}/lib
 inc_cttims_home = ${cttimes_home_tmp}/inc
 
-CC = icc
+CC = gcc
 AR = ar
-CFLAGS = -I../include -I${inc_cttims_home} -L. -L${lib_cttims_home}
+CFLAGS = -I../include -I${inc_cttims_home} -L. -L${lib_cttims_home} -Ofast
 
 OBJ = clusterRPBaz.o cut4Ev.o cut4Ev_v2.o \
 	 DTime.o GCDis.o GMTime.o \
@@ -56,5 +56,5 @@ cut4Ev: cut4Ev_v2.o
 .PHONY:clean
 
 clean:
-	-@rm ${OBJ} ${LIBS} ${LIB_ALL} ${EXEC_PART1} ${EXEC_PART2} 2>&-
+	-rm ${OBJ} ${LIBS} ${LIB_ALL} ${EXEC_PART1} ${EXEC_PART2} -f 2>&-
 
