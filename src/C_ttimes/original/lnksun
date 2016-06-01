@@ -1,0 +1,8 @@
+#
+if ($1 == "remodl") then
+   echo f77 $1.f -O -C -o $1 $2.o libtau.o libsun.o
+   f77 $1.f -O -C -o $1 $2.o libtau.o libsun.o
+else
+   echo f77 $1.f -O -C -o $1 libtau.o libsun.o
+   f77 $1.f -O -C -o $1 libtau.o libsun.o
+endif

@@ -1,0 +1,58 @@
+Tau-p programs and utilities -- G. Helffrich/U. Bristol,1991 - 2010.
+   Last revised 21 Jan. 2010.
+
+This code is a modification of the original Buland and Kennett code to compute
+  tau-p tables for the iasp91 model.  I modified it to do the following things:
+
+1) do automatic configuration;
+2) remove Fortran language constructs that prevent it from compiling on the
+   GCC Fortran compilers;
+3) to write table formats that are self describing (in size) and do not require
+   recompilation of previously-built travel time tables if the table storage
+   size changes;
+4) adds additional phases to the set that is computed in the tables, viz.
+   depth phases for ScS and PcP and diffracted phases for PKP branches;
+5) adds a subroutine-callable interface to the tables;
+6) adds tables for different models (see below);
+7) adds more depth phases and optionally more core phases.
+
+See README for a lengthy description of the changes.
+
+This will build the ttimes program and various useful models:
+  iasp91, ak135, fakeprem, fakeprem20s, sp6, kghj, pemc
+
+The default model is the last in the list assigned to MODELS in the Makefile.
+Currently, it is ak135.  To select alternative models, use, e.g.
+
+   ttimes -model iasp91
+
+where the model name can be any in the previous list.
+
+This version is made from a configure file.  To configure and install:
+
+./configure
+make
+make install
+make clean
+
+This will build a default set of travel time tables for all models.  To build
+a smaller set of tables by eliminating the depth phase arrivals for core
+reflections and multiple core phases, use the --disable-depth option:
+
+./configure --disable-depth
+
+To enable generation of multiple core bounce phases (PmKP m=3,4 and SmKS
+m=3,4,5), configure with --enable-core option:
+
+./configure --enable-core
+
+This can be used in conjunction with --disable-depth.
+
+Default install location for travel time tables and linkable subroutine code
+is /usr/local/lib, and for the ttimes program is /usr/local/bin.  See
+
+./configure --help
+
+for directions explaining how to change this.  The file tpttsub.o is a
+subroutine interface to the tables, which is installed in the library directory.
+See tptt.f for how to call the subroutines.

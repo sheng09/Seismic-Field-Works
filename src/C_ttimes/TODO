@@ -1,0 +1,7 @@
+Implement a reader of the TauP Toolkit java tables.  Use the Java object
+serialization stream protocol to decode.  See Oracle documentation under that
+description and
+
+http://www.javaworld.com/community/node/2915
+
+for an exhaustive breakdown of one of the stream dumps.

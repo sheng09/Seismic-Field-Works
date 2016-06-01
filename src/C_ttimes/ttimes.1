@@ -1,0 +1,95 @@
+.TH TTIMES 1
+.SH NAME
+ttimes \- travel time table access using tau-splines
+.SH SYNOPSIS
+.B ttimes
+[ -debug ]
+[ -units [ km | deg ]]
+[ -verbose | -terse ]
+[ -takeoff ]
+[ -model \f2name\fP ]
+.SH DESCRIPTION
+ttimes is a simple user interface to access the travel times for
+a wide variety of seismic phases at a given distance for specified
+source depth, with user control over the selection of phases.
+.LP
+ttimes is set up to automatically access the tau-spline tables for 
+the 1991 IASPEI Seismological Tables based on the velocity model 
+iasp91 (direct access files - iasp91.hed, iasp91.tbl).
+Other sets of tables can be accessed by invoking ttimes
+with the -model argument (see below).
+.SH OPTIONS
+.PP
+The following options are recognized.
+.IP -model
+Alternative model to use for calculations (the default is ak135).
+Choices are ``iasp91'', ``ak135'', ``sp6'', ``kghj'', ``pemc'', ``fakeprem'', ``fakeprem20s''.
+(PREM-related models are so-named because they contain a crustal structure that
+is continental, rather than average earth, but the shallow upper mantle
+structure is slightly modified to yield travel times that differ from PREM by
+< 0.1s.)
+.IP -units
+Distance units, either \f2km\fP or \f2degrees\fP for kilometers or degrees.
+Default unit is degrees.
+.IP -verbose
+A verbose description of the input is provided before input prompts.
+This is the default behavior.
+.IP -terse
+The input isn't described; you are simply prompted for input (phase list,
+depth and range).
+.IP -takeoff
+Add the take-off angle from the focal sphere for each phase to the output
+listing.
+.IP -debug
+Write debugging output to the file ``ttim1.lis''.
+Only useful for code debugging.
+.SS Phase specification
+The phase specification scheme is briefly described when ttimes
+is run. Initially the specification procedure is set up in
+query mode and responses need to be made at the star prompt (*),
+a null response terminates the specification.  
+The selection of phases can be done either by giving a sequence
+of generic phase names or by specifying keywords. 
+The available keywords are:
+.nf
+P      gives P-up, P, Pdiff, PKP and PKiKP
+P+     gives P-up, P, Pdiff, PKP, PKiKP, PcP, pP, pPdiff, pPKP, 
+             pPKiKP, sP, sPdiff, sPKP, sPKiKP 
+S      gives S-up, S, Sdiff, SKS
+S+     gives S-up, S, Sdiff, SKS, sS, SSdiff, sSKS,
+             pS, pSdiff, pSKS
+basic  gives P+, S+ and ScP, SKP, PKKP, SKKP, PP and PKPPKP
+all    gives all available phases
+.fi
+.SS Depth specification
+Once the choice of phase branches has been made the depth needs
+to be specified and the specified tau-splines appropriate for 
+that depth are then formed.
+.SS Distance specification
+The user is prompted for epicentral distance (delta) and the
+travel time, slowness, curvature and depth derivative are displayed
+for each phase.
+.LP 
+A new depth can be chosen by setting the distance negative, and
+the procedure terminated by setting the depth negative as well.
+End-of-file also stops the program.
+.SH ENVIRONMENT
+.IP LIBTAUMOD
+If set, specifies an alternative model file name xxxx (for tables
+xxx.hed, xxx.tbl); identical in function to -model parameter.
+If first character if name is `/', it is interpreted to mean an
+absolute path to a file.
+Otherwise, the model file is sought in the default model directory.
+.SH SEE ALSO
+gtt91
+.SH AUTHORS
+R. Buland,
+National Earthquake Information Centre, U.S. Geological Survey
+Golden, Colorado
+.br
+B.L.N. Kennett,
+Research School of Earth Sciences, Australian National University            
+Canberra, Australia 
+.br
+(extensions by) G. Helffrich,
+University of Bristol, Earth Sciences, Bristol, UK
