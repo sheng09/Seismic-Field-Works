@@ -6,13 +6,22 @@
 
 #define CUT_REF_P 'P'
 #define CUT_REF_O 'O'
+#define CUT_REF_T 'T'
+
+typedef int DAT_TYPE ;
+#define BH_SUFFIX 0
+#define SH_SUFFIX 2
 
 typedef struct
 {
         char  sacnm[128];
         char  stnm[8];
         char  ntwk[8];
-        Time  refT;
+
+        Time  refT; // reference time point for this sacfile
+        long long int  refSecsCount; // seconds count from timeZero to refT
+        int   refMsecsCount;         // mseconds left
+
         float b,e;
         float stla, stlo, stdp, stel;
 } sacData;
@@ -22,7 +31,11 @@ typedef struct
         char  evnm[16];
         float evla, evlo, evdp, evel, mag;
         char  imagtype[4];
-        Time  evTime;
+
+        Time  evTime; // time point for this event
+        long long int  evSecsCount; // seconds count from timeZero to evTime
+        int evMsecsCount;           // mseconds left
+
 } evData;
 
 /*
@@ -98,11 +111,11 @@ int fdFile(evData  *evdat,  const long _evnum ,
             const char cutRef, const float pre, const float suf,
             const float gcmin, const float gcmax,
             const float minMag, const float maxMag,  // Add by WangSheng 2015/12/02
-            char  *sacnmPre,
+            char  *sacnmPre, DAT_TYPE dat_type, // Add by WangSheng 2016/06/01
             FILE *fp);
 
 
 int geneSacCmd(char *outfile, const float ref_time, const float pre, const float suf,
-               const float t_origin, const float t_p, const float rayp,
+               const float t_origin, const float t_p, const float rayp,  // Add by WangSheng 2016/06/01
                FILE *fp);
 #endif

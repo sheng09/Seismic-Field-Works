@@ -1,4 +1,7 @@
 #home for sfw
+#sfw_home_tmp = .
+#cttimes_home_tmp = /opt/SFW/c_ttimes
+
 install_sfw_home = ${sfw_home_tmp}
 install_libdir   = ${sfw_home_tmp}/lib
 install_bindir   = ${sfw_home_tmp}/bin
@@ -13,7 +16,7 @@ CC = gcc
 AR = ar
 CFLAGS = -I../include -I${inc_cttims_home} -L. -L${lib_cttims_home} -Ofast
 
-OBJ = clusterRPBaz.o cut4Ev.o cut4Ev_v2.o \
+OBJ = clusterRPBaz.o cut4Ev_v2.o \
 	 DTime.o GCDis.o GMTime.o \
 	 NRootStack.o \
 	 pl_derfmod.o RpKmean.o SelectEq_ISC.o spDis.o \

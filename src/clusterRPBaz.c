@@ -158,7 +158,13 @@ int main(int argc, char *argv[])
 	// Read data from input file and discard data whose rp or baz is out of range
 	for( i = 0 ; i < nfile; ++i )
 	{
-		fscanf(fpin, "%s %f %f\n", data[i].filenm, &(data[i].rp), &(data[i].baz) );
+		if( 3 != fscanf(fpin, "%s %f %f\n", data[i].filenm, &(data[i].rp), &(data[i].baz) )  )
+		{
+			perrmsg( strinfile, ERR_READ_FILE);
+            exit(1);
+            break;
+		}
+
 		if( data[i].rp  < rpMin  || data[i].rp  > rpMax || 
 			data[i].baz < bazMin || data[i].baz > bazMax )
 		{

@@ -9,7 +9,7 @@ int rtime(Time *t)
 {
 	sscanf(t->KDATE,"%d/%d/%d", &(t->year), &(t->mon), &(t->day));
 	sscanf(t->KTIME,"%d:%d:%f", &(t->hour), &(t->min), &(t->f_s));
-	t->sec  = floorf(t->f_s);
+	t->sec  = (int) ( floorf(t->f_s) );
 	t->msec = (int) ((t->f_s - t->sec) * 1000.0f);
 	jd(t);
 	uni(t);
@@ -34,9 +34,9 @@ int wtime(Time *t)
 	return 0;
 }
 
-static int months[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},
+static long long int months[2][12]={{31,28,31,30,31,30,31,31,30,31,30,31},
                           {31,29,31,30,31,30,31,31,30,31,30,31}};
-static int pre[2][13]= {{0,31,59,90,120,151,181,212,243,273,304,334,365},
+static long long int pre[2][13]= {{0,31,59,90,120,151,181,212,243,273,304,334,365},
                         {0,31,60,91,121,152,182,213,244,274,305,335,366}};
 
 int shft(Time *t,float dfsec)
@@ -138,30 +138,48 @@ int uni(Time *t)
 	//End of Add and revision 2015/09/01
 	return 0;
 }
-float dtsameyear(Time *t1, Time *t2) //t1 - t2
+float dtsameyear(Time *t1, Time *t2, long long int *dSecs, int *dMsec ) //t1 - t2
 {
 	int djd  = t1->jday - t2->jday;
 	int dh   = t1->hour - t2->hour;
 	int dmin = t1->min  - t2->min;
 	float ds = t1->f_s  - t2->f_s;
+	int dsecd = (int) (floorf(ds)) ;
+	float dt;
 
-	ds += dmin * 60.0f;
-	ds += dh   * 3600.0f;
-	ds += djd  * 86400.0f;
+	//Calculate seconds count"dSecs" and msecond counts"dMsec"
+	*dSecs = 0;
+	*dSecs += djd * 86400;
+	*dSecs += dh  * 3600;
+	*dSecs += dmin * 60;
+
+	dt = *dSecs + ds;
+
+	*dSecs += dsecd;
+	*dMsec = (int) rint((ds - dsecd) * 1000);
+
+	//printf("%lld %f %f\n", *dSecs, ds, (ds - dsecd)*1000 );
+	//dt += dmin * 60.0f;
+	//dt += dh   * 3600.0f;
+	//dt += djd  * 86400.0f;
+
 	//if(t->year%4 != 0 || (t->year%100 == 0 && t->year%400 != 0))
-	//	ds +=  dyear * 365.0 * 86400;
+	//	dt +=  dyear * 365.0 * 86400;
 	//else
-	//	ds +=  dyear * 366.0 * 86400;
-	return ds;
+	//	dt +=  dyear * 366.0 * 86400;
+	return dt;
 }
-float dt(Time *t1, Time *t2) //t1 - t2
+
+float dt(Time *t1, Time *t2, long long int *dSecs, int *dMsec ) //t1 - t2
 {
 	float ds = 0.0f;
 	int i;
 	float pres1, pres2;
 	Time t1_0, t2_0;
+	long long int dSecs_1, dSecs_2;
+	int dMsec_1, dMsec_2;
 	if(t1->year == t2->year)
-		return dtsameyear(t1, t2);
+		return dtsameyear(t1, t2, dSecs, dMsec);
 	t1_0.year = t1->year;  t2_0.year = t2->year;
 	t1_0.mon  = 1;         t2_0.mon  = 1;
 	t1_0.day  = 1;         t2_0.day  = 1;
@@ -172,24 +190,46 @@ float dt(Time *t1, Time *t2) //t1 - t2
 	t1_0.msec = 0;         t2_0.msec = 0;
 	t1_0.f_s  = 0.0;       t2_0.f_s  = 0.0;
 
-	pres1 = dtsameyear(t1, &t1_0);
-	pres2 = dtsameyear(t2, &t2_0);
+	pres1 = dtsameyear(t1, &t1_0, &dSecs_1, &dMsec_1);
+	pres2 = dtsameyear(t2, &t2_0, &dSecs_2, &dMsec_2);
 	if(t1->year > t2->year)
 	{
-		ds = pre[ISLEAP(t2->year)][12] * 86400.0f - pres2 + pres1;
+		*dSecs = pre[ ISLEAP(t2->year) ][12] * 86400    - dSecs_2 + dSecs_1;
+		ds     = pre[ ISLEAP(t2->year) ][12] * 86400.0f - pres2   + pres1  ;
 		for(i = t2->year + 1; i < t1->year; ++i)
 		{
-			ds += pre[ISLEAP(i)][12] * 86400.0f;
+			ds     += pre[ISLEAP(i)][12] * 86400.0f;
+			*dSecs += pre[ISLEAP(i)][12] * 86400   ;
+		}
+
+		// dMsec must between 0~1000
+		*dMsec = dMsec_1 - dMsec_2;
+		if(*dMsec < 0)
+		{
+			*dSecs -= 1;
+			*dMsec += 1000;
 		}
 	}
 	else
 	{
-		ds = pre[ISLEAP(t1->year)][12] * 86400.0f - pres1 + pres2;
+		*dSecs = pre[ ISLEAP(t1->year) ][12] * 86400    - dSecs_1 + dSecs_2;
+		ds     = pre[ ISLEAP(t1->year)][12] * 86400.0f  - pres1   + pres2;
 		for(i = t1->year + 1; i < t2->year; ++i)
 		{
-			ds += pre[ISLEAP(i)][12] * 86400.0f;
+			ds     += pre[ISLEAP(i)][12] * 86400.0f;
+			*dSecs += pre[ISLEAP(i)][12] * 86400   ;
 		}
 		ds = -ds;
+
+		// dMsec must between 0~1000
+		*dMsec = dMsec_1 - dMsec_2;
+		if(*dMsec < 0)
+		{
+			*dSecs -= 1;
+			*dMsec += 1000;
+		}
+		*dSecs = -(*dSecs);
+		*dMsec = -(*dMsec);
 	}
 	return ds;
 }

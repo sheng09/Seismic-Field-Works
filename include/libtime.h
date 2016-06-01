@@ -12,6 +12,8 @@ typedef struct
 	int year, mon, jday, day;
 	int hour, min, sec, msec;
 	//int y,mon,jd,d,h,min;
+	// f_s : second.
+	// e.g.: 00:02:33.78 f_s = 33.78, then sec = 33 and msec = 780
 	float f_s;
 	//                    1234567890123
 	char KDATE[11];    // 2015/01/01
@@ -34,10 +36,23 @@ int ijd(Time *t);
 //Generate uniform dat
 int uni(Time *t);
 //Calculate time interval between "t1" and "t2"
-float dt(Time *t1, Time *t2); //t1 - t2
+float dt(Time *t1, Time *t2, long long int *dSecs, int *dMsec ); //t1 - t2
 //Calculate time interval between "t1" and "t2", t1 and t2 is within the same year
-float dtsameyear(Time *t1, Time *t2); //t1 - t2
+float dtsameyear(Time *t1, Time *t2, long long int *dSecs, int *dMsec ); //t1 - t2
 //Jugde whether the dat is reasonable.
 //1 <= mon <= 12; 1<=jday<=36X; ...
 int judge(Time *t);
+#endif
+
+
+#ifndef TIME_ZERO
+#define TIME_ZERO
+static Time timeZero = {
+	1970, 1, 1, 1,
+	0, 0, 0, 0,
+	0.0f,
+	{'1','9','7','0','/','0','1','/','0','1','\0'},
+	{'1','9','7','0','/','0','0','1','\0'},
+	{'0','0',':','0','0',':','0','0','.','0','0','0','\0','\0','\0','\0'}
+};
 #endif

@@ -216,7 +216,12 @@ int rdDat(Prj_Kmean *prj, char *filename)
 	for(i = 0; i < nline; ++i)
 	{
 		memset(Line, 0, LINEMAX);
-		fgets(Line, LINEMAX, fp);
+		if( fgets(Line, LINEMAX, fp) == NULL)
+		{
+			perrmsg( filename, ERR_READ_FILE);
+            exit(1);
+            break;
+		}
 		if(prj->dimension == 1)
 			sscanf(Line, "%f %s", &((prj->pts)[i][0]), (prj->tags)[i] );
 		if(prj->dimension == 2)
