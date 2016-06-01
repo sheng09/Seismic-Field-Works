@@ -1,4 +1,4 @@
-PREFIX = /home/sheng/test_sfw
+PREFIX = /opt/SFW
 PREFIX_CTTIMES = ${PREFIX}/c_ttimes
 
 export sfw_home_tmp=${PREFIX}
