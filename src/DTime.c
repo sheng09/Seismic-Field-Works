@@ -101,8 +101,8 @@ int main(int argc, char const *argv[])
 	}
 	Dt = dt(&t1,&t2, &dSecs, &dMsec);
 	if(Dt < 0)
-		printf("%lld sec %d msec %f sec -1\n",  dSecs, dMsec, Dt);
+		printf("%lld sec %d msec\n",  dSecs, dMsec);
 	else
-		printf("%lld sec %d msec %f sec  1\n",  dSecs, dMsec, Dt);
+		printf("%lld sec %d msec\n",  dSecs, dMsec);
 	return 0;
 }
