@@ -90,7 +90,7 @@ saclst kstnm knetwk kzdate kztime b e \
 #    2. Generate SAC script file
 #####
 
-cut4Ev -E evlist.tmp -D sacinfo.tmp -C $WINDOWS -G $GCWINDOWS ${MAGOPT} ${PRENAME} ${VERBOSE}
+cut4Ev -Eevlist.tmp -Dsacinfo.tmp -C$WINDOWS -G$GCWINDOWS ${MAGOPT} ${PRENAME} ${VERBOSE}
 chmod 777 sacCMD.sh
 
 rm ${DEST} -rf 2>&-
