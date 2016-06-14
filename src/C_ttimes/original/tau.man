@@ -1,0 +1,269 @@
+
+   Break this file into three parts (gtt91.1, ttimes91.1, and zstp91.1) as 
+indicated and install into your UNIX system to generate three new manual 
+pages.
+
+--------
+gtt91.1
+-------
+.TH GTT91
+.SH NAME
+gtt91 \- construction of computer accessible travel time tables
+.SH SYNOPSIS
+.B gtt91
+.SH DESCRIPTION 
+.B gtt91
+comprises a sequence of routines to set up a representation of
+the travel travel time tables for a given velocity model in terms of
+the tau-spline procedure of Buland & Chapman (1983), together with
+routines for user access (interactive and graphical).
+.SS Construction of tau-spline tables:
+.br
+The two basic stages are:
+.br
+.I remodl 
+\- construction of partial tau integrals for different 
+segments of a velocity model of the Earth.
+This requires discretisation of the velocity model at
+depths corresponding to the slowness employed in the
+representation of the tables.  It is at this point in the 
+process that the velocity model has to be specified and
+linked in with the rest of the routines - subsequently all 
+necessary information on the model is carried in the 
+direct access table files.  The procedure remodl
+generates two table files:
+.br
+.I     remodl.hed, remodl.tbl
+.br
+which are used as the input to the second stage (setbrn)
+.LP
+.I setbrn 
+\- construction of the tau-spline coefficients for different
+travel time branches corresponding to distinct seismic 
+phases. The tau-splines are generated for each of the 
+depths at which the model was sampled.  In addition 
+auxiliary tables are set up to allow interpolation to 
+arbitrary depth.  The procedure setbrn generates two
+direct access table files identified by the name of the
+velocity model 
+.br
+e.g.
+.I    iasp91.hed, iasp91.tbl
+.br
+These tables are used in the routine 
+.I ttimes91 
+which returns
+travel times for seismic phases at specified distance 
+and in other display and location procedures
+.LP
+A Makefile template is provided to allow the construction of the
+tau-spline tables for different velocity models.  The specification
+of the velocity model used for iasp91 is in terms of polynomials
+(up to cubic) in normalised radius for different portions of the
+velocity model.
+The main body of routines used by the gtt91 system are stored in the 
+.br
+.I $GTT91/libtau.f  
+.br
+and two include files 
+.br
+.I $GTT91/limits.inc and $GTT91/ttlim.inc
+.br
+are needed.
+.SS Access to travel time tables:
+.br
+The simplest mode of access to the travel time tables is interactive 
+use of the 
+.I ttimes91 
+command which allows user specification of 
+phases and returns the travel times for all specified phases at
+a particular epicentral distance, for a given source depth.
+.LP
+The travel time information can also be accessed in graphical form
+(Postscript output suitable for Laserwriter II) using the 
+zstp command which allows windowing in range and time.  
+A X-window version (zstx) is under development.
+.LP 
+The interface to the tau-spline tables is readily adapted
+to other computational procedures: 
+Printed travel time tables can be generated in a two stage process:
+.br
+i) Set up a summary file of travel timesfor many different source 
+depths and distances using the routine
+.br
+.I  ttable
+.br
+which allows interactive specification of source depths
+and distances, and includes all available phases.
+.br
+ii) Run the table sort routine
+.br
+.I  wtac
+.br
+which allows the interrogation of the summary file produced by 
+.I ttable.  
+.br
+.I wtac
+prompts for a phase code and the number of characters to match and 
+also the range of  epicentral distances required.  Output of travel time 
+tables is to a specified file in 
+.I tbl 
+format.  This 
+.I tbl 
+file can then be
+printed using 
+.I ptroff 
+facilities.
+.LP
+Other facilities (including information on take-off angles
+for source mechanism studies) are under development.        
+.SH ENVIRONMENT
+.IP GTT91
+Home directory for sources of gtt91 routines 
+access required for constructing modified
+travel time tables
+.SH SEE ALSO
+ttimes91, shake91, zstp91, zstx91, syax91
+.SH AUTHORS
+R. Buland,
+National Earthquake Information Centre, U.S. Geological Survey
+Golden, Colorado
+.br
+B.L.N. Kennett,
+Research School of Earth Sciences, Australian National University
+Canberra, Australia 
+-------
+ttimes91.1
+-------
+.TH TTIMES91
+.SH NAME:
+ttimes91 \- travel time table access using tau-splines
+.SH SYNOPSIS
+.B ttimes91
+.SH DESCRIPTION
+ttimes91 is a simple user interface to access the travel times for
+a wide variety of seismic phases at a given distance for specified
+source depth, with user control over the selection of phases.
+.LP
+ttimes91 is set up to automatically access the tau-spline tables for 
+the 1991 IASPEI Seismological Tables based on the velocity model 
+iasp91 (direct access files - iasp91.hed, iasp91.tbl).
+Other sets of tables can be accessed by invoking ttimes91 
+with an argument e.g.
+.br
+ttimes91  iasp89
+.br
+for tables (iasp89.hed, iasp89.tbl).
+.SS Phase specification
+The phase specification scheme is briefly described when ttimes91
+is run. Initially the specification procedure is set up in
+query mode and responses need to be made at the star prompt (*),
+a null response terminates the specification.  
+The selection of phases can be done either by giving a sequence
+of generic phase names or by specifying keywords. 
+The available keywords are:
+.nf
+P      gives P-up, P, Pdiff, PKP and PKiKP
+P+     gives P-up, P, Pdiff, PKP, PKiKP, PcP, pP, pPdiff, pPKP, 
+             pPKiKP, sP, sPdiff, sPKP, sPKiKP 
+S      gives S-up, S, Sdiff, SKS
+S+     gives S-up, S, Sdiff, SKS, sS, SSdiff, sSKS,
+             pS, pSdiff, pSKS
+basic  gives P+, S+ and ScP, SKP, PKKP, SKKP, PP and PKPPKP
+all    gives all available phases
+.fi
+.SS Depth specification
+Once the choice of phase branches has been made the depth needs
+to be specified and the specified tau-splines appropriate for 
+that depth are then formed.
+.SS Distance specification
+The user is prompted for epicentral distance (delta) and the
+travel time, slowness, curvature and depth derivative are displayed
+for each phase.
+.LP 
+A new depth can be chosen by setting the distance negative, and
+the procedure terminated but setting the depth negative as well.
+.SH SEE ALSO
+gtt91
+.SH AUTHORS
+R. Buland,
+National Earthquake Information Centre, U.S. Geological Survey
+Golden, Colorado
+.br
+B.L.N. Kennett,
+Research School of Earth Sciences, Australian National University            
+Canberra, Australia 
+--------
+zstp91.1
+--------
+.TH ZSTP91
+.SH NAME:
+zstp91 \- graphical interface to travel time tables using tau-splines
+.SH SYNOPSIS
+.B zstp91 < zst.cmd
+.SH DESCRIPTION
+zstp91 is a simple user interface to access the travel times for
+a wide variety of seismic phases and display them in a selected 
+time and distance window.
+.br
+User control is provided over the selection of phases.
+.SS Running zstp91
+zstp91 is run from a command file specifying the parameters for the 
+phase control as well as the features of the distance-time window 
+and frame.  The run sequence is
+.br 
+  zstp91 < zst.cmd
+.br
+where zst.cmd is a command file.
+For example to produce plots for all available phases over the
+span from 0 to 180 degrees for travel times up to 30 minutes, and a 
+source depth of 200km.
+.nf
+.ta 2.0
+     iasp91                 Model file
+	200.	           <tt> depth
+     1.  180.              <tt> delta min,max 
+        2                  <tt> pen colour
+     0.                    <tt> reduction slowness
+     FR                    Frame: FR-full frame, NL-no labels
+     5.0                   <fr> x-orig
+     2.0                   <fr> y-orig
+     3                     <fr> font choice
+         0.00   180.00     <fr> Dmin, Dmax
+        15.00              <fr> length of D-axis
+         0.00    40.00     <fr> Trmin,Trmax
+        25.00              <fr> length of T-axis
+        20.00   10.000     <fr> Large Tic spacing D,T
+         5.00    1.000     <fr> Small Tic spacing D,T
+         0       0         <fr> # of dec. in label D,T
+        0.4300   0.47500   <fr> character size text,title
+     Delta  deg                                          X-txt
+     Time  min                                           Y-txt
+     iasp91   200 km source                              Title
+.fi
+.SS Phase specification in zstp91:
+Groups of seismic phases can be selected via the keywords
+used for ttimes91
+The available keywords are:
+.nf
+P      gives P-up, P, Pdiff, PKP and PKiKP
+P+     gives P-up, P, Pdiff, PKP, PKiKP, PcP, pP, pPdiff, pPKP, 
+             pPKiKP, sP, sPdiff, sPKP, sPKiKP 
+S      gives S-up, S, Sdiff, SKS
+S+     gives S-up, S, Sdiff, SKS, sS, SSdiff, sSKS,
+             pS, pSdiff, pSKS
+basic  gives P+, S+ and ScP, SKP, PKKP, SKKP, PP and PKPPKP
+all    gives all available phases
+.fi   
+.SH SEE ALSO
+gtt91
+.SH AUTHORS
+B.L.N. Kennett,
+Research School of Earth Sciences, Australian National University            
+Canberra, Australia 
+.br
+using the travel time routines developed by:
+.br
+R. Buland,
+National Earthquake Information Centre, U.S. Geological Survey
+Golden, Colorado

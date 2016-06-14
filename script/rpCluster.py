@@ -54,11 +54,11 @@ def kMean(rps, clases, rpCenters, countRpCenters, numIter, minVar):
 		newCenter(rps, clases, rpCenters, countRpCenters)
 		var = calVar(rps, clases, rpCenters)
 		vars.append( var )
-		print("Iteration: %4d, Var: %12.6f" %(iterNum,var) )
+		print("Iteration: %4d, Var: %12.6f" %(iterNum,var), file=sys.stderr )
 		if var <= minVar:										#VAR cross minVar
-			print("Iteration Ends:\n\treach min VAR setting. %12.6f <= %12.6f" %(var, minVar))
+			print("Iteration Ends:\n\treach min VAR setting. var: %12.6f" %(var), file=sys.stderr )
 			return vars
-	print("Iteration Ends:\n\treach max iteration")
+	print("Iteration Ends:\n\treach max iteratio. var: %12.6f" %(var), file=sys.stderr )
 	return vars
 
 def usage():

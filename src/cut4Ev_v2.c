@@ -10,17 +10,26 @@
 static char HMSG[]=
 {"\
 Description: Generate SAC command for selecting and cutting sac file.\n\
-Usage: %-6s -C [O|P]/t1/t2 -G deg1/deg2 [-M min/max] -E event.list -D sacinfo [-P Prefilename] [-V]\n\
+Usage: %-6s -C[O|P]/t1/t2 -Gdeg1/deg2 [-Mmin/max] -Eevent.list -Dsacinfo [-Pprefilename] [-Ttailname] [-V]\n\
 \n\
-(-C [O|P]/t1/t2)      : windows data within [Parrival+t1, Parrival+t2]\n\
+(-C [O|P|T]/t1/t2)    : window for cutting data \n\
+           -CO/t1/t2  :  [O + t1, O + t2] \n\
+           -CT/t1/t2  :  [refT + t1, refT + t2] \n\
+                          refT(refercen Time) should be given within event.list.\n\
+           -CP/t1/t2  :  [Parrival + t1, Parrival + t2] \n\
+                          Parrival is theoretical traveltime, which may be wrong\n\
+                          for some kind of event-station distance.\n\
 (-G deg1/deg2)  : windows data within great circle distance [deg1, deg2]\n\
 [-M min/max]    : magnitude interval\n\
                   Defualt is select all magnitude.\n\
 (-E event.list) : events list file\n\
 (-D sacinfo)    : sac files info list file\n\
-[-P] Prefilename: pre for output sac files' name. \n\
+[-P Prefilename]: pre for output sac files' name. \n\
                   No more than 7 characters!\n\
                   Characters must be [A-z,a-z,_]!\n\
+[-T tailname]   : tailname specify which kind of filename extentsion is used. \n\
+                  \"-TBH\" for BH[NZE]\n\
+                  \"-TSH\" for SH[NZE]\n\
 [-V]            : open verbose\n\
 [-H] Display this message.\n\
 \n\
@@ -64,118 +73,134 @@ Example:\n\
 "};
 int main(int argc, char *argv[])
 {
-        FILE *fp;
-        char *strEv = NULL, *strSac = NULL;
-        int   fgEv = 0, fgSac = 0, fggc = 0, fgmag = 0;
-        int   i;
-        char  sacCMD[32]="sacCMD.sh";
-        sacData *sacdat;
-        evData  *evdat;
-        long nsac, nev;
-        float pre, suf;
-        char  cutRef = 'P';
-        float gcmin = -180.0f, gcmax = 720.0f;
-        float minMag = -1.0, maxMag = 10.0;
-        int   fgpre_suf = 0;
-        int   fgverbose = 0;
-        char  sacnmPre[128] = "EV";
-        //Point pe, ps;
-        for(i = 1; i < argc ; ++i)
-        {
-                if(argv[i][0] == '-')
-                {
-                        switch(argv[i][1])
-                        {
-                                case 'E':
-                                        strEv = argv[i+1];
-                                        fgEv = 1;
-                                        break;
-                                case 'D':
-                                        strSac = argv[i+1];
-                                        fgSac = 1;
-                                        break;
-                                case 'C':
-                                        sscanf(argv[i+1], "%c/%f/%f", &cutRef, &pre, &suf);
-                                        fgpre_suf = 1;
-                                        break;
-                                case 'G':
-                                        sscanf(argv[i+1], "%f/%f", &gcmin, &gcmax);
-                                        fggc = 1;
-                                        break;
-                                case 'M': // Add -M option by WangSheng 2015/12/02
-                                        sscanf(argv[i+1],"%f/%f", minMag, maxMag);
-                                        fgmag = 1;
-                                        break;
-                                case 'P': //Add -P option by WangSheng 2015/12/02
-                                        strcpy(sacnmPre, argv[i+1]);
-                                        break;
-                                case 'O':
-                                        strcpy(sacCMD, argv[i+1]);
-                                        break;
-                                case 'V':
-                                        fgverbose = 1;
-                                        break;
-                                case 'H':
-                                        fprintf(stderr, HMSG, argv[0]);
-                                        exit(0);
-                                        break;
-                        }
-                }
-        }
-        if(fgEv != 1 || fgSac != 1 || fgpre_suf != 1)
-        {
-                perrmsg("",ERR_MORE_ARGS);
-                //printf("%s\n", );
-                fprintf(stderr, HMSG, argv[0]);
-                exit(1);
-        }
-        if(cutRef != 'P' && cutRef != 'O')
-        {
-            perrmsg("",ERR_BAD_ARGS);
-            fprintf(stderr, "\' -C %c\'\n", cutRef);
-            exit(1);
-        }
+    FILE *fp;
+    char *strEv = NULL, *strSac = NULL;
+    int   fgEv = 0, fgSac = 0, fggc = 0, fgmag = 0;
+    int   i;
+    char  sacCMD[32]="sacCMD.sh";
+    sacData *sacdat;
+    evData  *evdat;
+    long nsac, nev;
+    float pre, suf;
+    char  cutRef = 'P';
+    float gcmin = -180.0f, gcmax = 720.0f;
+    float minMag = -1.0, maxMag = 10.0;
+    int   fgpre_suf = 0;
+    int   fgverbose = 0;
+    char  sacnmPre[128] = "EV";
 
-        // Add -M option by WangSheng 2015/12/02
-        if(minMag > maxMag || maxMag < 0.0 || minMag > 10.0)
+    DAT_TYPE datType;
+
+    //Point pe, ps;
+    for(i = 1; i < argc ; ++i)
+    {
+        if(argv[i][0] == '-')
         {
-            perrmsg("",ERR_BAD_ARGS);
-            fprintf(stderr, "\' -M %f/%f \'\n", minMag, maxMag);
-            exit(1);
+            switch(argv[i][1])
+            {
+                case 'E':
+                        strEv = &(argv[i][2]);
+                        fgEv = 1;
+                        break;
+                case 'D':
+                        strSac = &(argv[i][2]);
+                        fgSac = 1;
+                        break;
+                case 'C':
+                        sscanf( &(argv[i][2]), "%c/%f/%f", &cutRef, &pre, &suf);
+                        fgpre_suf = 1;
+                        break;
+                case 'G':
+                        sscanf( &(argv[i][2]), "%f/%f", &gcmin, &gcmax);
+                        fggc = 1;
+                        break;
+                case 'M': // Add -M option by WangSheng 2015/12/02
+                        sscanf( &(argv[i][2]),"%f/%f", &minMag, &maxMag);
+                        fgmag = 1;
+                        break;
+                case 'P': //Add -P option by WangSheng 2015/12/02
+                        strcpy(sacnmPre, &(argv[i][2]));
+                        break;
+                case 'T': //Add -T option by WangSheng 2016/06/01
+                        if( strcmp( &(argv[i][2]), "BH" ) == 0)
+                            datType = BH_SUFFIX;
+                        else if( strcmp( &(argv[i][2]), "SH" ) == 0)
+                            datType = SH_SUFFIX;
+                        //printf("%d \n", datType);
+                        break;
+                case 'O':
+                        strcpy(sacCMD, &(argv[i][2]) );
+                        break;
+                case 'V':
+                        fgverbose = 1;
+                        break;
+                case 'H':
+                        fprintf(stderr, HMSG, argv[0]);
+                        exit(0);
+                        break;
+            }
         }
+    }
 
-        //Add -P option by WangSheng 2015/12/02
-        sacnmPre[127] = 0;
-        //for(i = 6; i >=0 ;--i)
-        //{
-        //    if( ! ( ( sacnmPre[i] < 'z' && sacnmPre > 'a' ) || ( sacnmPre[i] < 'Z' && sacnmPre > 'A' ) ) )
-        //    {
-        //        sacnmPre[i] = '_';
-        //    }
-        //}
-        //
-        sacdat = rdSacLst(strSac, &nsac);
-        evdat  = rdEvLst(strEv, &nev);
+    if(fgEv != 1 || fgSac != 1 || fgpre_suf != 1)
+    {
+        perrmsg("",ERR_MORE_ARGS);
+        //printf("%s\n", );
+        fprintf(stderr, HMSG, argv[0]);
+        exit(1);
+    }
+    if(cutRef != 'P' && cutRef != 'O' && cutRef != 'T')
+    {
+        perrmsg("",ERR_BAD_ARGS);
+        fprintf(stderr, "\' -C%c\'\n", cutRef);
+        exit(1);
+    }
 
-        //wrtSacLst("ws_sac", sacdat, nsac);
-        //wrtEvLst("ws_ev", evdat, nev);
+    // Add -M option by WangSheng 2015/12/02
+    if(minMag > maxMag || maxMag < 0.0 || minMag > 10.0)
+    {
+        perrmsg("",ERR_BAD_ARGS);
+        fprintf(stderr, "\' -M %f/%f \'\n", minMag, maxMag);
+        exit(1);
+    }
 
-        if( NULL == ( fp = fopen(sacCMD,"w") ) )
-        {
-                perrmsg(sacCMD,ERR_OPEN_FILE);
-                exit(1);
-        }
-        fprintf(fp, "#!/bin/bash\n" );
-        //Add by wangsheng 2015/09/02
-        fprintf(fp, "mkdir ._out 2>&- || rm ._out/* -rf 2>&-\n");
-        //
-        if(fgverbose == 1)
-            fprintf(fp, "sac << EOF\n" );
-        else if(fgverbose == 0)
-            fprintf(fp, "sac >/dev/null << EOF\n" );
-        fdFile( evdat, nev, sacdat, nsac, cutRef, pre, suf, gcmin, gcmax , minMag, maxMag, sacnmPre , fp);
-        fprintf(fp, "q\nEOF\n" );
-        free(sacdat);
-        free(evdat);
-        return 0;
+    //Add -P option by WangSheng 2015/12/02
+    sacnmPre[127] = 0;
+    //for(i = 6; i >=0 ;--i)
+    //{
+    //    if( ! ( ( sacnmPre[i] < 'z' && sacnmPre > 'a' ) || ( sacnmPre[i] < 'Z' && sacnmPre > 'A' ) ) )
+    //    {
+    //        sacnmPre[i] = '_';
+    //    }
+    //}
+    //
+    printf("Initialization...\n");
+    sacdat = rdSacLst(strSac, &nsac);
+    evdat  = rdEvLst(strEv, &nev);
+
+    //wrtSacLst("ws_sac", sacdat, nsac);
+    //wrtEvLst("ws_ev", evdat, nev);
+
+    if( NULL == ( fp = fopen(sacCMD,"w") ) )
+    {
+        perrmsg(sacCMD,ERR_OPEN_FILE);
+        exit(1);
+    }
+    fprintf(fp, "#!/bin/bash\n" );
+    //Add by wangsheng 2015/09/02
+    fprintf(fp, "mkdir _cut4Ev_out 2>&- || rm _cut4Ev_out/* -rf 2>&-\n");
+    //
+    if(fgverbose == 1)
+        fprintf(fp, "sac << EOF\n" );
+    else if(fgverbose == 0)
+        fprintf(fp, "sac >/dev/null << EOF\n" );
+    fdFile( evdat, nev, sacdat, nsac, cutRef, pre, suf, gcmin, gcmax , minMag, maxMag, sacnmPre, datType, fp);
+    fprintf(fp, "q\nEOF\n" );
+
+    printf("Finished!\n\n");
+    printf("Please run the script of \"sacCMD.sh\"\n");
+    printf("Output data is with the directory of \"_cut4Ev_out\"\n\n");
+    free(sacdat);
+    free(evdat);
+    return 0;
 }

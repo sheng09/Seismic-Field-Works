@@ -178,7 +178,13 @@ int main(int argc, char *argv[])
     //
     for (i = 0; i < nhead; ++i)
     {
-        fgets(line, 1024, FPLog);
+        if( fgets(line, 1024, FPLog) == NULL)
+        {
+            perrmsg( strLog, ERR_READ_FILE);
+            exit(1);
+            break;
+        }
+
     }
     for(i = 0, readLog(FPLog, &InvMod, mod.nl),
         ObjSTD = InvMod.obj/200.0,

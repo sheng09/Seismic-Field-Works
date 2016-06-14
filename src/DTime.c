@@ -29,6 +29,8 @@ int main(int argc, char const *argv[])
 	int kt1d = NO, kt1jd = NO, kt1t = NO;
 	int kt2d = NO, kt2jd = NO, kt2t = NO;
 	float Dt;
+	long long int dSecs;
+	int dMsec;
 	memset(t1.KDATE,0,16);
 	memset(t1.KTIME,0,16);
 	memset(t1.KJD  ,0,16);
@@ -97,10 +99,10 @@ int main(int argc, char const *argv[])
 	{
 		exit(1);
 	}
-	Dt = dt(&t1,&t2);
+	Dt = dt(&t1,&t2, &dSecs, &dMsec);
 	if(Dt < 0)
-		printf("%f -1\n", Dt );
+		printf("%lld sec %d msec\n",  dSecs, dMsec);
 	else
-		printf("%f 1\n", Dt );
+		printf("%lld sec %d msec\n",  dSecs, dMsec);
 	return 0;
 }
