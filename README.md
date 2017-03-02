@@ -1,4 +1,4 @@
-Package for Seismic Field Works(PSFW)
+Package of Seismic Field Works(PSFW)
 =====================================================
 #1. What is PSFW
 Facing big data avalanche, automated tools are required in substitute some manual processing routines. And the Package of Seismic Field Work(PSFW), aims to save those who are struggling with seimic data processing.
@@ -29,7 +29,6 @@ cmpltSac4Ev.sh
 - `rpCluster.py`    Clustering accroding to RayParameter and BackAzimuth
 - `SH_Ref2Segy.sh`  Batch transforming reftek format data to segys
 - `SH_Segy2Sac.sh`  Batch transforming segy format data to sac format
-
 - `pkEv.sh`         A shell to cut4Ev, for customized data cutting
 - `rcvfn.sh`        Batch distilling receiver functions 
 - `SH_SortSegy.sh`  Sort segy format data
