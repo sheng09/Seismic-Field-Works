@@ -1,13 +1,13 @@
 Package of Seismic Field Works(PSFW)
 =====================================================
-#1. What is PSFW
+# 1. What is PSFW
 Facing big data avalanche, automated tools are required in substitute some manual processing routines. And the Package of Seismic Field Work(PSFW), aims to save those who are struggling with seimic data processing.
 
 PSFW is not a single program, but a set of independent programs, built in the Unix programming philosophy.
 
 PSFW involves works of other, some of which are revised slightly under their license.
 
-#2. Tools
+# 2. Tools
 Two categories of tools are: 1. binary, 2.script. 'binary' provides users precise configuration, while 'script' for easy usage.
 ## binary:
 - `GMTime`        Transform date format and time shift
